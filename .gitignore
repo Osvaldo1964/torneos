@@ -1,0 +1,13 @@
+# Carpeta de subidas (Ignorar archivos, mantener carpeta)
+Assets/images/uploads/*
+!Assets/images/uploads/.gitkeep
+
+# Configuración (Opcional: puedes ignorarlo si subirás a un repo público)
+# Config/Config.php
+
+# XAMPP / PHP
+.idea/
+.vscode/
+*.log
+.DS_Store
+Thumbs.db
