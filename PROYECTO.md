@@ -3,7 +3,7 @@
 Este documento detalla el progreso actual, el plan maestro y los hitos pendientes del sistema integral de gestión para ligas de fútbol, ahora bajo una arquitectura desacoplada (API + APP + MÓVIL).
 
 ## 🚀 Estado Actual del Proyecto
-**Versión:** 1.0.0 (Re-arquitectura Exitosa)
+**Versión:** 1.1.0 (Arquitectura de Perfiles Cooperativos)
 **Última Actualización:** 27 de Enero, 2026
 **Arquitectura:** API-First (Backend PHP + JWT, Frontend desacoplado con Bootstrap 5).
 
@@ -14,61 +14,45 @@ Este documento detalla el progreso actual, el plan maestro y los hitos pendiente
 ### 1. Infraestructura y Seguridad (API)
 - [x] **API Core:** Sistema base con enrutamiento dinámico, controladores y modelos.
 - [x] **Seguridad JWT:** Implementado sistema de tokens con duración de **1 hora** (3600s).
-### 3. Registro Público de Ligas
-- [x] **Flujo Auto-Registro:** Landing page con modal para crear ligas y administradores automáticamente.
-- [x] **Seguridad Unificada:** JWT incluye `id_liga` y `id_rol` para aislamiento total de datos.
-- [x] **UX Mejorada:** Icono de acceso rápido al sitio público desde el admin.
+- [x] **Aislamiento Multitenant:** Datos filtrados automáticamente por `id_liga` según el token.
 
-### 4. Módulo de Ligas
-- [x] **CRUD Ligas:** Gestión completa para Super Admin y configuración personalizada para Liga Admin.
-- [x] **Local Assets:** Eliminación total de dependencias de CDNs externos.
+### 2. Estructura de Datos Avanzada
+- [x] **Separación Identidad/Perfil:** Diferenciación clara entre la tabla `personas` (cuenta de acceso) y `jugadores` (perfil deportivo). Permite que un administrador sea también jugador.
+- [x] **Nóminas por Torneo:** Sistema de vinculación de jugadores a equipos con asignación de dorsales específica para cada certamen.
 
-### 3. Frontend Administrativo (APP)
-- [x] **Login Pro:** Interfaz moderna que consume la API y gestiona el ciclo de vida del JWT.
-- [x] **Dashboard:** Estructura base con Sidebar dinámico y plantillas unificadas.
-- [x] **Landing Page:** Página de inicio pública de alto impacto con acceso al sistema.
+### 3. Módulos Administrativos (CRUDs)
+- [x] **Módulo de Ligas:** Gestión de configuración, logos y parámetros financieros.
+- [x] **Módulo de Torneos:** Creación de certámenes, categorías y carga de logos.
+- [x] **Módulo de Equipos:** Registro de equipos con escudos y asignados a ligas.
+- [x] **Módulo de Jugadores:** Registro completo con fotografía, datos personales y perfil técnico.
+- [x] **Módulo de Nóminas:** Interfaz visual para inscribir equipos en torneos y asignar jugadores con dorsales.
+
+### 4. Frontend y Experiencia de Usuario
+- [x] **Dashboard:** Estructura base con Sidebar dinámico.
+- [x] **Assets Locales:** Eliminación total de dependencias de CDNs externos (FontAwesome, Bootstrap, DataTables incluidos localmente).
+- [x] **Landing Page:** Interfaz pública de alto impacto para auto-registro.
 
 ---
 
 ## 🛠️ Plan General de Desarrollo (Roadmap 2026)
 
-### Fase 1: Migración y Core (EN CURSO)
-Objetivo: Migrar todos los módulos- [x] Configuración inicial y arquitectura API-First.
-- [x] Login con JWT y multitenencia por `id_liga`.
-- [x] Módulo de Roles (CRUD y Permisos iOS-style).
-- [x] Módulo de Usuarios/Personas (Seguridad jerárquica).
-- [x] Módulo de Ligas (Configuración base y Logo).
-- [ ] **Módulo de Torneos** (Configuración financiera descentralizada).
-- [ ] Módulo de Equipos (Escudos y delegados).
-- [ ] Módulo de Jugadores (Nóminas y dorsales).
-- [ ] Calendario y Resultados (Encuentros).
-- [ ] Motor Financiero (Facturación de multas y mensualidades).
+### Fase 1: Motor de Competencia (EN CURSO)
+- [ ] **Calendario Automático:** Generación de fixtures basados en equipos inscritos.
+- [ ] **Programación de Partidos:** Asignación de fechas, horas y canchas.
+- [ ] **Planillas de Juego:** Interfaz para árbitros/delegados para reportar resultados y eventos (goles, tarjetas).
 
-## Próximos Pasos (Inmediato)
-1. **Torneos**: Implementar la gestión de torneos donde cada torneo define su propia categoría y lista de precios (multas, arbitraje).
-2. **Equipos**: Registro de equipos vinculados a la liga y a los torneos.
+### Fase 2: Gestión de Estadísticas
+- [ ] **Tabla de Posiciones:** Cálculo automático de puntos, DG, GF, GC.
+- [ ] **Goleadores y Valla Menos Vencida:** Ranking en tiempo real.
+- [ ] **Sistema de Sanciones:** Control automático de fechas de suspensión por tarjetas acumuladas.
 
-### Fase 2: Torneos y Competencia (PENDIENTE)
-Objetivo: Automatizar la creación de calendarios y el registro de resultados.
-
-### Fase 3: Motor Financiero (PENDIENTE)
-Objetivo: Generación automática de facturas por mensualidades y multas (tarjetas).
+### Fase 3: Motor Financiero
+- [ ] **Facturación Automática:** Generación de cobros por arbitraje y mensualidades.
+- [ ] **Módulo de Pagos:** Registro de ingresos y control de morosidad por equipo/jugador.
 
 ---
 
-## 📋 Tareas Pendientes Inmediatas
-
-### Prioridad Alta
-- [ ] **Módulo de Ligas:** Implementar el CRUD de ligas consumiendo la nueva API.
-- [ ] **Módulo de Usuarios:** Registro de personas asignando roles y ligas.
-- [ ] **Validación de Permisos del lado de la APP:** Ocultar/mostrar botones según el rol.
-
-### Prioridad Media
-- [ ] **App Móvil:** Iniciar el desarrollo de la interfaz `/app-movil` para consulta de resultados.
-
----
-
-## 📝 Notas Técnicas
-*   **Tokens:** Duración de 1 hora. Se requiere re-login al expirar (mejor seguridad).
-*   **Offline First:** El sistema no depende de CDNs externos para sus funciones principales.
-*   **Aislamiento:** La API filtra los datos según el `id_liga` asociado al usuario en el token.
+## � Notas Técnicas Recientes
+*   **Modelo de Perfiles:** Se eliminó la dependencia directa de `equipo_jugadores` con `personas`. Ahora se usa la tabla intermedia `jugadores` para permitir que un mismo usuario tenga múltiples roles sociales y deportivos.
+*   **Integridad Reforzada:** Todas las relaciones de base de datos cuentan con Foreign Keys con `ON DELETE CASCADE` para mantener la limpieza del sistema.
+*   **Optimización de Archivos:** Se han eliminado scripts de diagnóstico y depuración, dejando un entorno de producción limpio.

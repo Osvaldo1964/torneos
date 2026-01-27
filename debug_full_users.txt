@@ -1,4 +1,0 @@
-ID: 1 | Nombre: Admin | Ident: '12345678' | Email: 'admin@globalcup.com' | Liga: 1 | Rol: 1
-ID: 2 | Nombre: OSVALDO | Ident: '73111405' | Email: 'ligaprueba@globalcup.com' | Liga: 2 | Rol: 2
-ID: 3 | Nombre: DIEGO | Ident: '1082876077' | Email: 'diego@gmail.com' | Liga: 3 | Rol: 2
-ID: 4 | Nombre: DIEGO | Ident: '9999999' | Email: 'mail@mail.com' | Liga: 4 | Rol: 2
