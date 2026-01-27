@@ -29,9 +29,9 @@ if (!empty($arrUrl[2])) {
 $controllerFile = "Controllers/" . $controller . ".php";
 if (file_exists($controllerFile)) {
     require_once($controllerFile);
-    $controller = new $controller();
-    if (method_exists($controller, $method)) {
-        $controller->{$method}($params);
+    $objController = new $controller();
+    if (method_exists($objController, $method)) {
+        $objController->{$method}($params);
     } else {
         header('Content-Type: application/json');
         echo json_encode(["status" => false, "msg" => "Endpoint no encontrado"]);

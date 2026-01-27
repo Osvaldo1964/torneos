@@ -27,8 +27,10 @@ class Login extends Controllers
                 }
 
                 $tokenPayload = [
-                    "id" => $requestUser['id_persona'],
-                    "rol" => $requestUser['id_rol'],
+                    "id_user" => $requestUser['id_persona'],
+                    "id_rol" => $requestUser['id_rol'],
+                    "id_liga" => $requestUser['id_liga'],
+                    "liga_logo" => $requestUser['liga_logo'],
                     "email" => $requestUser['email'],
                     "nombre" => $requestUser['nombres']
                 ];

@@ -8,8 +8,10 @@ class LoginModel extends Mysql
 
     public function loginUser($email, $password)
     {
-        $sql = "SELECT id_persona, nombres, email, id_rol FROM personas 
-                WHERE email = '$email' AND password = '$password'";
+        $sql = "SELECT p.id_persona, p.nombres, p.email, p.id_rol, p.id_liga, l.logo as liga_logo 
+                FROM personas p
+                LEFT JOIN ligas l ON p.id_liga = l.id_liga
+                WHERE p.email = '$email' AND p.password = '$password'";
         return $this->select($sql);
     }
 }

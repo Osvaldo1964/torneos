@@ -14,14 +14,14 @@ Este documento detalla el progreso actual, el plan maestro y los hitos pendiente
 ### 1. Infraestructura y Seguridad (API)
 - [x] **API Core:** Sistema base con enrutamiento dinámico, controladores y modelos.
 - [x] **Seguridad JWT:** Implementado sistema de tokens con duración de **1 hora** (3600s).
-- [x] **Conexión PDO:** Capa de datos optimizada y segura contra inyecciones SQL.
-- [x] **Local Assets:** Todas las librerías (Bootstrap, FontAwesome, DataTables, jQuery, SweetAlert2) cargadas localmente para máxima velocidad y privacidad.
+### 3. Registro Público de Ligas
+- [x] **Flujo Auto-Registro:** Landing page con modal para crear ligas y administradores automáticamente.
+- [x] **Seguridad Unificada:** JWT incluye `id_liga` y `id_rol` para aislamiento total de datos.
+- [x] **UX Mejorada:** Icono de acceso rápido al sitio público desde el admin.
 
-### 2. Módulo de Roles y Permisos
-- [x] **Gestión de Roles:** CRUD completo de roles (SuperAdmin, Liga Admin, Delegado, Jugador).
-- [x] **Sistema de Permisos (Wow UI):** 
-    * Interfaz tipo switch (iOS style) para asignar Leer, Escribir, Actualizar y Eliminar por módulo.
-    * Integración total con la API.
+### 4. Módulo de Ligas
+- [x] **CRUD Ligas:** Gestión completa para Super Admin y configuración personalizada para Liga Admin.
+- [x] **Local Assets:** Eliminación total de dependencias de CDNs externos.
 
 ### 3. Frontend Administrativo (APP)
 - [x] **Login Pro:** Interfaz moderna que consume la API y gestiona el ciclo de vida del JWT.
@@ -33,10 +33,20 @@ Este documento detalla el progreso actual, el plan maestro y los hitos pendiente
 ## 🛠️ Plan General de Desarrollo (Roadmap 2026)
 
 ### Fase 1: Migración y Core (EN CURSO)
-Objetivo: Migrar todos los módulos existentes a la nueva arquitectura API-First.
-- [ ] Módulo de Usuarios (Personas).
-- [ ] Módulo de Ligas.
-- [ ] Módulo de Equipos.
+Objetivo: Migrar todos los módulos- [x] Configuración inicial y arquitectura API-First.
+- [x] Login con JWT y multitenencia por `id_liga`.
+- [x] Módulo de Roles (CRUD y Permisos iOS-style).
+- [x] Módulo de Usuarios/Personas (Seguridad jerárquica).
+- [x] Módulo de Ligas (Configuración base y Logo).
+- [ ] **Módulo de Torneos** (Configuración financiera descentralizada).
+- [ ] Módulo de Equipos (Escudos y delegados).
+- [ ] Módulo de Jugadores (Nóminas y dorsales).
+- [ ] Calendario y Resultados (Encuentros).
+- [ ] Motor Financiero (Facturación de multas y mensualidades).
+
+## Próximos Pasos (Inmediato)
+1. **Torneos**: Implementar la gestión de torneos donde cada torneo define su propia categoría y lista de precios (multas, arbitraje).
+2. **Equipos**: Registro de equipos vinculados a la liga y a los torneos.
 
 ### Fase 2: Torneos y Competencia (PENDIENTE)
 Objetivo: Automatizar la creación de calendarios y el registro de resultados.

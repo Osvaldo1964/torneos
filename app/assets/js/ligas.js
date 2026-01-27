@@ -1,0 +1,177 @@
+const api_url = app_config.api_url;
+const token = app_config.token;
+const user = app_config.user;
+let tableLigas;
+
+document.addEventListener('DOMContentLoaded', () => {
+    // Si es Super Admin, mostrar botón de "Nueva Liga"
+    if (user.id_rol == 1) {
+        document.getElementById('btnContainer').innerHTML = `
+            <button class="btn btn-primary px-4 fw-bold shadow-sm" style="border-radius: 12px;" onclick="openModal()">
+                <i class="fa-solid fa-plus me-2"></i> Crear Liga
+            </button>
+        `;
+    } else if (user.id_rol == 2) {
+        document.querySelector('h2.fw-bold').innerText = "Configuración de Mi Liga";
+    }
+
+    tableLigas = $('#tableLigas').DataTable({
+        "ajax": {
+            "url": api_url + "Ligas/getLigas",
+            "headers": { "Authorization": "Bearer " + token },
+            "dataSrc": "data"
+        },
+        "columns": [
+            { "data": "id_liga" },
+            {
+                "data": null,
+                "render": function (data) {
+                    return `
+                        <div class="d-flex align-items-center">
+                            <img src="https://ui-avatars.com/api/?name=${data.nombre}&background=0D8ABC&color=fff" class="rounded-circle me-3" style="width: 40px; height: 40px;">
+                            <div>
+                                <div class="fw-bold">${data.nombre}</div>
+                                <small class="text-muted">Liga ID: ${data.id_liga}</small>
+                            </div>
+                        </div>
+                    `;
+                }
+            },
+            {
+                "data": "cuota_mensual_jugador",
+                "className": "text-center",
+                "render": function (data) { return "$ " + parseFloat(data).toLocaleString(); }
+            },
+            {
+                "data": null,
+                "className": "text-center",
+                "render": function (data) {
+                    return `
+                        <span class="badge bg-warning-subtle text-warning border border-warning-subtle px-2">A: $${parseFloat(data.valor_amarilla).toLocaleString()}</span>
+                        <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2">R: $${parseFloat(data.valor_roja).toLocaleString()}</span>
+                    `;
+                }
+            },
+            {
+                "data": "estado",
+                "render": function (data) {
+                    return data == 1
+                        ? '<span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-2" style="border-radius: 8px;">Activa</span>'
+                        : '<span class="badge bg-danger-subtle text-danger border border-danger-subtle px-3 py-2" style="border-radius: 8px;">Inactiva</span>';
+                }
+            },
+            {
+                "data": null,
+                "render": function (data) {
+                    return `
+                        <div class="text-center">
+                            <button class="btn btn-light btn-sm shadow-sm me-1" style="border-radius: 8px;" onclick="fntEdit(${data.id_liga})"><i class="fa-solid fa-pencil text-primary"></i></button>
+                            ${user.id_rol == 1 ? `<button class="btn btn-light btn-sm shadow-sm" style="border-radius: 8px;" onclick="fntDel(${data.id_liga})"><i class="fa-solid fa-trash text-danger"></i></button>` : ''}
+                        </div>
+                    `;
+                }
+            }
+        ],
+        "language": app_config.datatables_lang,
+        "order": [[0, "asc"]]
+    });
+
+    const formLiga = document.getElementById('formLiga');
+    formLiga.onsubmit = async (e) => {
+        e.preventDefault();
+        const formData = {
+            id_liga: document.getElementById('idLiga').value,
+            nombre: document.getElementById('nombre').value,
+            cuota_mensual_jugador: document.getElementById('cuota_mensual_jugador').value,
+            valor_arbitraje_base: document.getElementById('valor_arbitraje_base').value,
+            valor_amarilla: document.getElementById('valor_amarilla').value,
+            valor_roja: document.getElementById('valor_roja').value,
+            estado: document.getElementById('estado').value
+        };
+
+        try {
+            const response = await fetch(api_url + "Ligas/setLiga", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + token
+                },
+                body: JSON.stringify(formData)
+            });
+            const result = await response.json();
+
+            if (result.status) {
+                Swal.fire("Éxito", result.msg, "success");
+                bootstrap.Modal.getInstance(document.getElementById('modalLiga')).hide();
+                tableLigas.ajax.reload();
+            } else {
+                Swal.fire("Error", result.msg, "error");
+            }
+        } catch (error) {
+            Swal.fire("Error", "Ocurrió un error al procesar la solicitud", "error");
+        }
+    };
+});
+
+function openModal() {
+    document.getElementById('formLiga').reset();
+    document.getElementById('idLiga').value = 0;
+    document.getElementById('modalTitle').innerText = "Crear Nueva Liga";
+    new bootstrap.Modal(document.getElementById('modalLiga')).show();
+}
+
+async function fntEdit(id) {
+    try {
+        const response = await fetch(api_url + "Ligas/getLiga/" + id, {
+            headers: { "Authorization": "Bearer " + token }
+        });
+        const result = await response.json();
+        if (result.status) {
+            const d = result.data;
+            document.getElementById('idLiga').value = d.id_liga;
+            document.getElementById('nombre').value = d.nombre;
+            document.getElementById('cuota_mensual_jugador').value = d.cuota_mensual_jugador;
+            document.getElementById('valor_arbitraje_base').value = d.valor_arbitraje_base;
+            document.getElementById('valor_amarilla').value = d.valor_amarilla;
+            document.getElementById('valor_roja').value = d.valor_roja;
+            document.getElementById('estado').value = d.estado;
+            document.getElementById('modalTitle').innerText = "Configurar Liga: " + d.nombre;
+            new bootstrap.Modal(document.getElementById('modalLiga')).show();
+        }
+    } catch (error) {
+        Swal.fire("Error", "No se pudo obtener la información", "error");
+    }
+}
+
+function fntDel(id) {
+    Swal.fire({
+        title: "¿Eliminar Liga?",
+        text: "Al eliminar la liga, todos sus datos quedarán suspendidos.",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonText: "Sí, eliminar",
+        cancelButtonText: "Cancelar"
+    }).then(async (result) => {
+        if (result.isConfirmed) {
+            try {
+                const response = await fetch(api_url + "Ligas/delLiga", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + token
+                    },
+                    body: JSON.stringify({ id_liga: id })
+                });
+                const res = await response.json();
+                if (res.status) {
+                    Swal.fire("Eliminado", res.msg, "success");
+                    tableLigas.ajax.reload();
+                } else {
+                    Swal.fire("Error", res.msg, "error");
+                }
+            } catch (error) {
+                Swal.fire("Error", "No se pudo completar la acción", "error");
+            }
+        }
+    });
+}

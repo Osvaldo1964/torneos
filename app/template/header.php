@@ -12,20 +12,53 @@
     <link rel="stylesheet" href="assets/plugins/fontawesome/css/all.min.css">
     <link rel="stylesheet" href="assets/plugins/datatables/dataTables.bootstrap5.min.css">
     <style>
+        :root {
+            --sidebar-width: 280px;
+            --topbar-height: 70px;
+            --primary: #0f172a;
+            --accent: #3b82f6;
+        }
+
         body {
             font-family: 'Outfit', sans-serif;
-            background-color: #f1f5f9;
-            display: flex;
-            height: 100vh;
+            background-color: #f8fafc;
             overflow: hidden;
         }
 
+        /* Layout Sidebar */
         .sidebar {
-            width: 280px;
-            background: #0f172a;
+            width: var(--sidebar-width);
+            background: var(--primary);
             color: white;
             padding: 30px;
-            flex-shrink: 0;
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+            z-index: 1000;
+            transition: 0.3s;
+        }
+
+        .main-wrapper {
+            margin-left: var(--sidebar-width);
+            width: calc(100% - var(--sidebar-width));
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Top Bar */
+        .topbar {
+            height: var(--topbar-height);
+            background: white;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 0 40px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 999;
         }
 
         .main-content {
@@ -35,7 +68,7 @@
         }
 
         .sidebar h2 span {
-            color: #3b82f6;
+            color: var(--accent);
         }
 
         .nav-link {
@@ -56,10 +89,36 @@
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
         }
 
+        /* Icon Styles */
+        .top-icon {
+            font-size: 1.2rem;
+            color: #64748b;
+            margin-left: 20px;
+            cursor: pointer;
+            transition: 0.2s;
+            position: relative;
+        }
+
+        .top-icon:hover {
+            color: var(--accent);
+        }
+
+        .badge-notify {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: #ef4444;
+            color: white;
+            font-size: 10px;
+            padding: 2px 5px;
+            border-radius: 50px;
+            border: 2px solid white;
+        }
+
         /* Switch iOS Style */
         .form-check-input:checked {
-            background-color: #3b82f6;
-            border-color: #3b82f6;
+            background-color: var(--accent);
+            border-color: var(--accent);
         }
 
         .form-switch .form-check-input {
@@ -75,17 +134,103 @@
 
 <body>
     <div class="sidebar d-flex flex-column">
-        <h2 class="mb-5 fw-bold">Global<span>Cup</span></h2>
+        <h2 class="mb-5 fw-bold text-nowrap">Global<span>Cup</span></h2>
         <nav class="nav flex-column mb-auto">
             <a href="dashboard.php" class="nav-link <?= $data['page_name'] == 'dashboard' ? 'active fw-bold' : '' ?>"><i
                     class="fa-solid fa-gauge me-2"></i> Dashboard</a>
-            <a href="roles.php" class="nav-link <?= $data['page_name'] == 'roles' ? 'active fw-bold' : '' ?>"><i
+            <a href="roles.php" id="menuRoles"
+                class="nav-link <?= $data['page_name'] == 'roles' ? 'active fw-bold' : '' ?>"><i
                     class="fa-solid fa-key me-2"></i> Roles</a>
-            <a href="ligas.php" class="nav-link <?= $data['page_name'] == 'ligas' ? 'active fw-bold' : '' ?>"><i
+            <a href="usuarios.php" id="menuUsuarios"
+                class="nav-link <?= $data['page_name'] == 'usuarios' ? 'active fw-bold' : '' ?>"><i
+                    class="fa-solid fa-users me-2"></i> Usuarios</a>
+            <a href="nominas.php" class="nav-link <?= $data['page_name'] == 'nominas' ? 'active fw-bold' : '' ?>"><i
+                    class="fa-solid fa-clipboard-list me-2"></i> Nóminas</a>
+            <a href="ligas.php" id="menuLigas"
+                class="nav-link <?= $data['page_name'] == 'ligas' ? 'active fw-bold' : '' ?>"><i
                     class="fa-solid fa-building-columns me-2"></i> Ligas</a>
+            <a href="torneos.php" class="nav-link <?= $data['page_name'] == 'torneos' ? 'active fw-bold' : '' ?>"><i
+                    class="fa-solid fa-trophy me-2"></i> Torneos</a>
+            <a href="equipos.php" class="nav-link <?= $data['page_name'] == 'equipos' ? 'active fw-bold' : '' ?>"><i
+                    class="fa-solid fa-shield-halved me-2"></i> Equipos</a>
+            <a href="jugadores.php" class="nav-link <?= $data['page_name'] == 'jugadores' ? 'active fw-bold' : '' ?>"><i
+                    class="fa-solid fa-user-graduate me-2"></i> Jugadores</a>
         </nav>
         <hr>
         <button class="btn btn-outline-danger btn-sm border-0 text-start" onclick="logout()"><i
                 class="fa-solid fa-right-from-bracket me-2"></i> Cerrar Sesión</button>
     </div>
-    <div class="main-content">
+
+    <div class="main-wrapper">
+        <header class="topbar">
+            <div class="d-flex align-items-center">
+                <i class="fa-solid fa-bars-staggered me-4 text-muted fs-5 cursor-pointer"></i>
+                <h5 class="m-0 fw-bold text-dark fs-6">Panel de Administración</h5>
+            </div>
+
+            <div class="d-flex align-items-center">
+                <div class="top-icon">
+                    <i class="fa-solid fa-bell"></i>
+                    <span class="badge-notify">3</span>
+                </div>
+                <a href="../landing/index.php" class="top-icon text-decoration-none">
+                    <i class="fa-solid fa-earth-americas"></i>
+                </a>
+                <div class="top-icon">
+                    <i class="fa-solid fa-gear"></i>
+                </div>
+                <div class="ms-4 ps-4 border-start d-flex align-items-center">
+                    <div class="text-end me-3 d-none d-md-block">
+                        <div class="fw-bold small text-dark" id="headerUserName">Admin</div>
+                        <div class="text-muted" style="font-size: 11px;" id="headerUserRole">Super Admin</div>
+                    </div>
+                    <img src="https://ui-avatars.com/api/?name=Admin&background=0f172a&color=fff" class="rounded-circle"
+                        style="width: 35px; height: 35px;" id="headerUserAvatar">
+                </div>
+            </div>
+        </header>
+
+        <main class="main-content">
+            <script>
+                document.addEventListener('DOMContentLoaded', () => {
+                    const user = JSON.parse(localStorage.getItem('gc_user'));
+                    if (user) {
+                        if (document.getElementById('headerUserName')) document.getElementById('headerUserName').innerText =
+                            user.nombre;
+
+                        const roles = { 1: 'Super Admin', 2: 'Liga Admin', 3: 'Delegado', 4: 'Jugador' };
+                        if (document.getElementById('headerUserRole')) document.getElementById('headerUserRole').innerText =
+                            roles[user.id_rol] || 'Usuario';
+
+                        // Restringir módulo de Roles solo a Super Admin (1)
+                        if (user.id_rol != 1 && document.getElementById('menuRoles')) {
+                            document.getElementById('menuRoles').remove();
+                        }
+
+                        // Configuración del menú de Ligas
+                        const menuLigas = document.getElementById('menuLigas');
+                        if (menuLigas) {
+                            if (user.id_rol == 1) {
+                                // Super Admin: Ve todas
+                                menuLigas.innerHTML = '<i class="fa-solid fa-building-columns me-2"></i> Ligas';
+                            } else if (user.id_rol == 2) {
+                                // Liga Admin: Solo ve la suya
+                                menuLigas.innerHTML = '<i class="fa-solid fa-gear me-2"></i> Mi Liga';
+                            } else {
+                                // Otros: No ven configuración de liga
+                                menuLigas.remove();
+                            }
+                        }
+
+                        const avatarImg = document.getElementById('headerUserAvatar');
+                        if (avatarImg) {
+                            if (user.id_rol != 1 && user.liga_logo && user.liga_logo != "default_logo.png") {
+                                avatarImg.src = `assets/images/logos/${user.liga_logo}`;
+                                avatarImg.classList.add('border', 'p-1', 'bg-light');
+                            } else {
+                                avatarImg.src = `https://ui-avatars.com/api/?name=${user.nombre}&background=0f172a&color=fff`;
+                            }
+                        }
+                    }
+                });
+            </script>

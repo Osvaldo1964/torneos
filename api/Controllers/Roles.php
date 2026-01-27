@@ -14,6 +14,11 @@ class Roles extends Controllers
         if (!$this->userData) {
             $this->res(false, "Token inválido o expirado");
         }
+
+        // Solo Super Admin puede acceder a este controlador
+        if ($this->userData['id_rol'] != 1) {
+            $this->res(false, "No tienes permisos para acceder a este módulo");
+        }
     }
 
     public function getRoles()
