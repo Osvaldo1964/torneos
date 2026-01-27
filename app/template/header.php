@@ -144,8 +144,6 @@
             <a href="usuarios.php" id="menuUsuarios"
                 class="nav-link <?= $data['page_name'] == 'usuarios' ? 'active fw-bold' : '' ?>"><i
                     class="fa-solid fa-users me-2"></i> Usuarios</a>
-            <a href="nominas.php" class="nav-link <?= $data['page_name'] == 'nominas' ? 'active fw-bold' : '' ?>"><i
-                    class="fa-solid fa-clipboard-list me-2"></i> Nóminas</a>
             <a href="ligas.php" id="menuLigas"
                 class="nav-link <?= $data['page_name'] == 'ligas' ? 'active fw-bold' : '' ?>"><i
                     class="fa-solid fa-building-columns me-2"></i> Ligas</a>
@@ -155,6 +153,11 @@
                     class="fa-solid fa-shield-halved me-2"></i> Equipos</a>
             <a href="jugadores.php" class="nav-link <?= $data['page_name'] == 'jugadores' ? 'active fw-bold' : '' ?>"><i
                     class="fa-solid fa-user-graduate me-2"></i> Jugadores</a>
+            <a href="nominas.php" class="nav-link <?= $data['page_name'] == 'nominas' ? 'active fw-bold' : '' ?>"><i
+                    class="fa-solid fa-clipboard-list me-2"></i> Nóminas</a>
+            <a href="calendario.php"
+                class="nav-link <?= $data['page_name'] == 'calendario' ? 'active fw-bold' : '' ?>"><i
+                    class="fa-solid fa-calendar-days me-2"></i> Calendario</a>
         </nav>
         <hr>
         <button class="btn btn-outline-danger btn-sm border-0 text-start" onclick="logout()"><i

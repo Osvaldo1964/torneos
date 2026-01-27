@@ -15,7 +15,14 @@ class Torneos extends Controllers
 
     public function getTorneos()
     {
-        $arrData = $this->model->selectTorneos($this->userData['id_liga']);
+        $idLiga = intval($this->userData['id_liga']);
+        // Si es la liga 1 (Admin Global), puede ver todos los torneos
+        if ($idLiga == 1) {
+            $sql = "SELECT * FROM torneos WHERE estado != 'ELIMINADO'";
+            $arrData = $this->model->select_all($sql);
+        } else {
+            $arrData = $this->model->selectTorneos($idLiga);
+        }
         $this->res(true, "Listado de torneos", $arrData);
     }
 
