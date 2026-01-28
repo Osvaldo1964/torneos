@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 28-01-2026 a las 06:11:59
+-- Tiempo de generación: 28-01-2026 a las 20:20:47
 -- Versión del servidor: 10.4.32-MariaDB
 -- Versión de PHP: 8.2.12
 
@@ -38,6 +38,38 @@ CREATE TABLE `arbitros` (
   `fecha_creacion` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+--
+-- Volcado de datos para la tabla `arbitros`
+--
+
+INSERT INTO `arbitros` (`id_arbitro`, `id_persona`, `nombre_completo`, `identificacion`, `telefono`, `email`, `estado`, `fecha_creacion`) VALUES
+(1, NULL, 'PEDRO PEREZ', '995544', '3344', 'abr@mail.com', 1, '2026-01-28 13:21:38'),
+(2, NULL, 'juan carlos', '995544', '3344', 'abr2@mail.com', 1, '2026-01-28 13:50:38');
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `arbitro_roles`
+--
+
+CREATE TABLE `arbitro_roles` (
+  `id_rol` int(11) NOT NULL,
+  `id_torneo` int(11) NOT NULL,
+  `nombre` varchar(100) NOT NULL,
+  `monto` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `estado` tinyint(4) DEFAULT 1,
+  `fecha_creacion` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Volcado de datos para la tabla `arbitro_roles`
+--
+
+INSERT INTO `arbitro_roles` (`id_rol`, `id_torneo`, `nombre`, `monto`, `estado`, `fecha_creacion`) VALUES
+(1, 2, 'Central', 50000.00, 1, '2026-01-28 13:39:29'),
+(2, 2, 'Asistente', 40000.00, 1, '2026-01-28 13:39:29'),
+(3, 2, 'Cuarto Árbitro', 30000.00, 1, '2026-01-28 13:39:29');
+
 -- --------------------------------------------------------
 
 --
@@ -48,9 +80,19 @@ CREATE TABLE `configuracion_arbitros` (
   `id_configuracion` int(11) NOT NULL,
   `id_torneo` int(11) NOT NULL,
   `monto_por_partido` decimal(10,2) NOT NULL,
+  `monto_central` decimal(10,2) DEFAULT 0.00,
+  `monto_asistente` decimal(10,2) DEFAULT 0.00,
+  `monto_cuarto` decimal(10,2) DEFAULT 0.00,
   `estado` tinyint(4) DEFAULT 1,
   `fecha_creacion` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Volcado de datos para la tabla `configuracion_arbitros`
+--
+
+INSERT INTO `configuracion_arbitros` (`id_configuracion`, `id_torneo`, `monto_por_partido`, `monto_central`, `monto_asistente`, `monto_cuarto`, `estado`, `fecha_creacion`) VALUES
+(1, 2, 50000.00, 50000.00, 0.00, 0.00, 1, '2026-01-28 13:21:47');
 
 -- --------------------------------------------------------
 
@@ -368,6 +410,7 @@ CREATE TABLE `pagos_arbitros` (
   `id_pago` int(11) NOT NULL,
   `id_partido` int(11) NOT NULL,
   `id_arbitro` int(11) NOT NULL,
+  `rol` varchar(20) DEFAULT 'CENTRAL',
   `monto` decimal(10,2) NOT NULL,
   `fecha_pago` date DEFAULT NULL,
   `estado` enum('PENDIENTE','PAGADO') DEFAULT 'PENDIENTE',
@@ -377,6 +420,14 @@ CREATE TABLE `pagos_arbitros` (
   `usuario_registro` int(11) NOT NULL,
   `fecha_creacion` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Volcado de datos para la tabla `pagos_arbitros`
+--
+
+INSERT INTO `pagos_arbitros` (`id_pago`, `id_partido`, `id_arbitro`, `rol`, `monto`, `fecha_pago`, `estado`, `numero_comprobante`, `forma_pago`, `observaciones`, `usuario_registro`, `fecha_creacion`) VALUES
+(2, 2, 2, 'Central', 50000.00, NULL, 'PENDIENTE', NULL, NULL, NULL, 4, '2026-01-28 14:27:37'),
+(3, 2, 1, 'Asistente', 40000.00, NULL, 'PENDIENTE', NULL, NULL, NULL, 4, '2026-01-28 14:27:37');
 
 -- --------------------------------------------------------
 
@@ -402,6 +453,14 @@ CREATE TABLE `pagos_gastos` (
   `fecha_creacion` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+--
+-- Volcado de datos para la tabla `pagos_gastos`
+--
+
+INSERT INTO `pagos_gastos` (`id_pago`, `id_torneo`, `tipo_gasto`, `concepto`, `beneficiario`, `monto`, `fecha_pago`, `numero_comprobante`, `forma_pago`, `documento_soporte`, `estado`, `motivo_anulacion`, `observaciones`, `usuario_registro`, `fecha_creacion`) VALUES
+(1, 2, 'ESCENARIO', 'alquiler campo', 'parque 1', 50000.00, '2026-01-28', '', 'EFECTIVO', '', 'ACTIVO', NULL, 'partido 3', 4, '2026-01-28 15:14:50'),
+(3, 2, 'ESCENARIO', 'alquiler campo', 'parque 1', 50000.00, '2026-01-28', '', 'EFECTIVO', '', 'ACTIVO', NULL, 'kklllk', 4, '2026-01-28 15:22:52');
+
 -- --------------------------------------------------------
 
 --
@@ -414,6 +473,9 @@ CREATE TABLE `partidos` (
   `id_local` int(11) NOT NULL,
   `id_visitante` int(11) NOT NULL,
   `id_arbitro` int(11) DEFAULT NULL,
+  `id_asistente1` int(11) DEFAULT NULL,
+  `id_asistente2` int(11) DEFAULT NULL,
+  `id_cuarto` int(11) DEFAULT NULL,
   `fecha_partido` datetime DEFAULT NULL,
   `goles_local` int(11) DEFAULT 0,
   `goles_visitante` int(11) DEFAULT 0,
@@ -431,8 +493,29 @@ CREATE TABLE `partidos` (
 -- Volcado de datos para la tabla `partidos`
 --
 
-INSERT INTO `partidos` (`id_partido`, `id_torneo`, `id_local`, `id_visitante`, `id_arbitro`, `fecha_partido`, `goles_local`, `goles_visitante`, `costo_arbitraje`, `arbitraje_pagado`, `estado`, `id_fase`, `id_grupo`, `nro_jornada`, `parent_partido_a`, `parent_partido_b`) VALUES
-(1, 2, 2, 3, NULL, NULL, 2, 1, 0.00, 0, 'JUGADO', 1, 1, 1, NULL, NULL);
+INSERT INTO `partidos` (`id_partido`, `id_torneo`, `id_local`, `id_visitante`, `id_arbitro`, `id_asistente1`, `id_asistente2`, `id_cuarto`, `fecha_partido`, `goles_local`, `goles_visitante`, `costo_arbitraje`, `arbitraje_pagado`, `estado`, `id_fase`, `id_grupo`, `nro_jornada`, `parent_partido_a`, `parent_partido_b`) VALUES
+(2, 2, 2, 3, NULL, NULL, NULL, NULL, '2026-01-28 10:26:00', 3, 2, 0.00, 0, 'JUGADO', 1, 1, 1, NULL, NULL);
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `partidos_arbitros`
+--
+
+CREATE TABLE `partidos_arbitros` (
+  `id_partido_arbitro` int(11) NOT NULL,
+  `id_partido` int(11) NOT NULL,
+  `id_arbitro` int(11) NOT NULL,
+  `id_rol` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Volcado de datos para la tabla `partidos_arbitros`
+--
+
+INSERT INTO `partidos_arbitros` (`id_partido_arbitro`, `id_partido`, `id_arbitro`, `id_rol`) VALUES
+(9, 2, 2, 1),
+(10, 2, 1, 2);
 
 -- --------------------------------------------------------
 
@@ -456,9 +539,10 @@ CREATE TABLE `partido_eventos` (
 --
 
 INSERT INTO `partido_eventos` (`id_evento`, `id_partido`, `id_jugador`, `id_equipo`, `tipo_evento`, `minuto`, `observacion`, `created_at`) VALUES
-(6, 1, 3, 2, 'GOL', 15, '', '2026-01-28 04:21:51'),
-(7, 1, 3, 2, 'AMARILLA', 25, '', '2026-01-28 04:21:51'),
-(8, 1, 3, 2, 'AMARILLA', 35, '', '2026-01-28 04:21:51');
+(15, 1, 3, 2, 'GOL', 15, '', '2026-01-28 14:03:51'),
+(16, 1, 3, 2, 'AMARILLA', 25, '', '2026-01-28 14:03:51'),
+(17, 1, 3, 2, 'AMARILLA', 35, '', '2026-01-28 14:03:51'),
+(18, 2, 3, 2, 'AMARILLA', 15, '', '2026-01-28 14:27:37');
 
 -- --------------------------------------------------------
 
@@ -676,7 +760,8 @@ CREATE TABLE `sanciones_economicas` (
 
 INSERT INTO `sanciones_economicas` (`id_sancion`, `id_torneo`, `tipo_sancion`, `id_equipo`, `id_jugador`, `id_partido`, `concepto`, `monto`, `pago_acumulado`, `estado`, `fecha_sancion`, `fecha_pago`, `id_recibo`, `observaciones`, `fecha_creacion`) VALUES
 (1, 2, 'COMPORTAMIENTO', 2, 3, NULL, 'Daños en el mobiliario', 50000.00, 50000.00, 'PAGADO', '2026-01-28', '2026-01-28', 5, 'prueba de sanciones', '2026-01-28 04:21:07'),
-(2, 2, 'AMARILLA', 2, 3, 1, 'Sanción por tarjeta amarilla', 10000.00, 10000.00, 'PAGADO', '2026-01-27', '2026-01-27', 4, NULL, '2026-01-28 04:21:51');
+(2, 2, 'AMARILLA', 2, 3, NULL, 'Sanción por tarjeta amarilla', 10000.00, 10000.00, 'PAGADO', '2026-01-27', '2026-01-27', 4, NULL, '2026-01-28 04:21:51'),
+(3, 2, 'AMARILLA', 2, 3, 2, 'Sanción por tarjeta amarilla', 10000.00, 0.00, 'PENDIENTE', '2026-01-28', NULL, NULL, NULL, '2026-01-28 14:27:37');
 
 -- --------------------------------------------------------
 
@@ -761,6 +846,13 @@ ALTER TABLE `arbitros`
   ADD KEY `id_persona` (`id_persona`),
   ADD KEY `idx_nombre` (`nombre_completo`),
   ADD KEY `idx_identificacion` (`identificacion`);
+
+--
+-- Indices de la tabla `arbitro_roles`
+--
+ALTER TABLE `arbitro_roles`
+  ADD PRIMARY KEY (`id_rol`),
+  ADD KEY `id_torneo` (`id_torneo`);
 
 --
 -- Indices de la tabla `configuracion_arbitros`
@@ -906,7 +998,19 @@ ALTER TABLE `partidos`
   ADD KEY `id_visitante` (`id_visitante`),
   ADD KEY `id_arbitro` (`id_arbitro`),
   ADD KEY `id_fase` (`id_fase`),
-  ADD KEY `id_grupo` (`id_grupo`);
+  ADD KEY `id_grupo` (`id_grupo`),
+  ADD KEY `id_asistente1` (`id_asistente1`),
+  ADD KEY `id_asistente2` (`id_asistente2`),
+  ADD KEY `id_cuarto` (`id_cuarto`);
+
+--
+-- Indices de la tabla `partidos_arbitros`
+--
+ALTER TABLE `partidos_arbitros`
+  ADD PRIMARY KEY (`id_partido_arbitro`),
+  ADD KEY `id_partido` (`id_partido`),
+  ADD KEY `id_arbitro` (`id_arbitro`),
+  ADD KEY `id_rol` (`id_rol`);
 
 --
 -- Indices de la tabla `partido_eventos`
@@ -1003,13 +1107,19 @@ ALTER TABLE `torneo_fases`
 -- AUTO_INCREMENT de la tabla `arbitros`
 --
 ALTER TABLE `arbitros`
-  MODIFY `id_arbitro` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id_arbitro` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+
+--
+-- AUTO_INCREMENT de la tabla `arbitro_roles`
+--
+ALTER TABLE `arbitro_roles`
+  MODIFY `id_rol` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT de la tabla `configuracion_arbitros`
 --
 ALTER TABLE `configuracion_arbitros`
-  MODIFY `id_configuracion` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id_configuracion` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT de la tabla `configuracion_cuotas`
@@ -1087,25 +1197,31 @@ ALTER TABLE `pagos`
 -- AUTO_INCREMENT de la tabla `pagos_arbitros`
 --
 ALTER TABLE `pagos_arbitros`
-  MODIFY `id_pago` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id_pago` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT de la tabla `pagos_gastos`
 --
 ALTER TABLE `pagos_gastos`
-  MODIFY `id_pago` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id_pago` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT de la tabla `partidos`
 --
 ALTER TABLE `partidos`
-  MODIFY `id_partido` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id_partido` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+
+--
+-- AUTO_INCREMENT de la tabla `partidos_arbitros`
+--
+ALTER TABLE `partidos_arbitros`
+  MODIFY `id_partido_arbitro` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
 
 --
 -- AUTO_INCREMENT de la tabla `partido_eventos`
 --
 ALTER TABLE `partido_eventos`
-  MODIFY `id_evento` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+  MODIFY `id_evento` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
 
 --
 -- AUTO_INCREMENT de la tabla `permisos`
@@ -1147,7 +1263,7 @@ ALTER TABLE `roles`
 -- AUTO_INCREMENT de la tabla `sanciones_economicas`
 --
 ALTER TABLE `sanciones_economicas`
-  MODIFY `id_sancion` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id_sancion` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT de la tabla `torneos`
@@ -1170,6 +1286,12 @@ ALTER TABLE `torneo_fases`
 --
 ALTER TABLE `arbitros`
   ADD CONSTRAINT `arbitros_ibfk_1` FOREIGN KEY (`id_persona`) REFERENCES `personas` (`id_persona`) ON DELETE SET NULL;
+
+--
+-- Filtros para la tabla `arbitro_roles`
+--
+ALTER TABLE `arbitro_roles`
+  ADD CONSTRAINT `arbitro_roles_ibfk_1` FOREIGN KEY (`id_torneo`) REFERENCES `torneos` (`id_torneo`) ON DELETE CASCADE;
 
 --
 -- Filtros para la tabla `configuracion_arbitros`
@@ -1280,7 +1402,18 @@ ALTER TABLE `partidos`
   ADD CONSTRAINT `partidos_ibfk_1` FOREIGN KEY (`id_torneo`) REFERENCES `torneos` (`id_torneo`) ON DELETE CASCADE,
   ADD CONSTRAINT `partidos_ibfk_2` FOREIGN KEY (`id_local`) REFERENCES `equipos` (`id_equipo`) ON DELETE CASCADE,
   ADD CONSTRAINT `partidos_ibfk_3` FOREIGN KEY (`id_visitante`) REFERENCES `equipos` (`id_equipo`) ON DELETE CASCADE,
-  ADD CONSTRAINT `partidos_ibfk_4` FOREIGN KEY (`id_arbitro`) REFERENCES `personas` (`id_persona`) ON DELETE SET NULL;
+  ADD CONSTRAINT `partidos_ibfk_4` FOREIGN KEY (`id_arbitro`) REFERENCES `personas` (`id_persona`) ON DELETE SET NULL,
+  ADD CONSTRAINT `partidos_ibfk_5` FOREIGN KEY (`id_asistente1`) REFERENCES `arbitros` (`id_arbitro`) ON DELETE SET NULL,
+  ADD CONSTRAINT `partidos_ibfk_6` FOREIGN KEY (`id_asistente2`) REFERENCES `arbitros` (`id_arbitro`) ON DELETE SET NULL,
+  ADD CONSTRAINT `partidos_ibfk_7` FOREIGN KEY (`id_cuarto`) REFERENCES `arbitros` (`id_arbitro`) ON DELETE SET NULL;
+
+--
+-- Filtros para la tabla `partidos_arbitros`
+--
+ALTER TABLE `partidos_arbitros`
+  ADD CONSTRAINT `partidos_arbitros_ibfk_1` FOREIGN KEY (`id_partido`) REFERENCES `partidos` (`id_partido`) ON DELETE CASCADE,
+  ADD CONSTRAINT `partidos_arbitros_ibfk_2` FOREIGN KEY (`id_arbitro`) REFERENCES `arbitros` (`id_arbitro`) ON DELETE CASCADE,
+  ADD CONSTRAINT `partidos_arbitros_ibfk_3` FOREIGN KEY (`id_rol`) REFERENCES `arbitro_roles` (`id_rol`) ON DELETE CASCADE;
 
 --
 -- Filtros para la tabla `permisos`
