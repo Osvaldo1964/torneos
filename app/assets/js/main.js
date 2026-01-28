@@ -1,5 +1,6 @@
 const app_config = {
     api_url: "http://localhost/torneos/api/",
+    base_url: "http://localhost/torneos/",
     token: localStorage.getItem('gc_token'),
     user: JSON.parse(localStorage.getItem('gc_user')),
     datatables_lang: {

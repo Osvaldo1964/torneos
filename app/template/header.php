@@ -158,6 +158,9 @@
             <a href="calendario.php"
                 class="nav-link <?= $data['page_name'] == 'calendario' ? 'active fw-bold' : '' ?>"><i
                     class="fa-solid fa-calendar-days me-2"></i> Calendario</a>
+            <a href="posiciones.php"
+                class="nav-link <?= $data['page_name'] == 'posiciones' ? 'active fw-bold' : '' ?>"><i
+                    class="fa-solid fa-medal me-2"></i> Posiciones</a>
         </nav>
         <hr>
         <button class="btn btn-outline-danger btn-sm border-0 text-start" onclick="logout()"><i
@@ -201,7 +204,12 @@
                         if (document.getElementById('headerUserName')) document.getElementById('headerUserName').innerText =
                             user.nombre;
 
-                        const roles = { 1: 'Super Admin', 2: 'Liga Admin', 3: 'Delegado', 4: 'Jugador' };
+                        const roles = {
+                            1: 'Super Admin',
+                            2: 'Liga Admin',
+                            3: 'Delegado',
+                            4: 'Jugador'
+                        };
                         if (document.getElementById('headerUserRole')) document.getElementById('headerUserRole').innerText =
                             roles[user.id_rol] || 'Usuario';
 
