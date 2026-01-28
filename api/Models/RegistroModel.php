@@ -31,4 +31,4 @@ class RegistroModel extends Mysql
         return !empty($request);
     }
 }
-?>
+

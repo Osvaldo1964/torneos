@@ -85,7 +85,7 @@ class Competicion extends Controllers
 
                 // 2. Sincronizar Eventos (Borrar y reinsertar es lo más simple para edición)
                 $this->model->deleteEventosPartido($idPartido);
-                require_once("Models/SancionesModel.php");
+                require_once(dirname(__DIR__) . "/Models/SancionesModel.php");
                 $sancionesModel = new SancionesModel();
                 $partidoData = $this->model->selectPartido($idPartido);
                 $idTorneo = $partidoData['id_torneo'];
@@ -110,6 +110,13 @@ class Competicion extends Controllers
                             $ev['tipo']
                         );
                     }
+                }
+
+                // 3. Generar Pagos a Árbitros (Todos los asignados)
+                if ($estado == 'JUGADO') {
+                    require_once(dirname(__DIR__) . "/Models/ArbitrosModel.php");
+                    $arbitrosModel = new ArbitrosModel();
+                    $arbitrosModel->generarPagoPartido($idPartido, $idTorneo, $this->userData['id_user']);
                 }
 
                 if ($request) {
@@ -297,5 +304,22 @@ class Competicion extends Controllers
         }
 
         return $fixture;
+    }
+    public function setProgramacion()
+    {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $data = json_decode(file_get_contents("php://input"), true);
+            $idPartido = intval($data['id_partido'] ?? 0);
+            $fecha = $data['fecha_partido'] ?? '';
+            $terna = $data['terna'] ?? []; // Array de {id_arbitro, id_rol}
+
+            if ($idPartido > 0 && !empty($fecha)) {
+                $request = $this->model->updateProgramacion($idPartido, $fecha, $terna);
+                if ($request) {
+                    $this->res(true, "Programación de partido actualizada");
+                }
+            }
+            $this->res(false, "Error al actualizar la programación");
+        }
     }
 }

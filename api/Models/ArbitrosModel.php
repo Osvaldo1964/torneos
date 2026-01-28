@@ -15,7 +15,7 @@ class ArbitrosModel extends Mysql
     /**
      * Crea o actualiza la configuración de pagos a árbitros
      */
-    public function guardarConfiguracion($idTorneo, $montoPorPartido)
+    public function guardarConfiguracion($idTorneo, $montoCentral, $montoAsistente, $montoCuarto)
     {
         // Verificar si ya existe configuración
         $existe = $this->getConfiguracion($idTorneo);
@@ -23,15 +23,16 @@ class ArbitrosModel extends Mysql
         if ($existe) {
             // Actualizar
             $sql = "UPDATE configuracion_arbitros 
-                    SET monto_por_partido = ? 
+                    SET monto_central = ?, monto_asistente = ?, monto_cuarto = ? 
                     WHERE id_torneo = ?";
-            $arrValues = array($montoPorPartido, $idTorneo);
+            $arrValues = array($montoCentral, $montoAsistente, $montoCuarto, $idTorneo);
             return $this->update($sql, $arrValues);
         } else {
             // Insertar
-            $sql = "INSERT INTO configuracion_arbitros (id_torneo, monto_por_partido, estado) 
-                    VALUES (?, ?, ?)";
-            $arrValues = array($idTorneo, $montoPorPartido, 1);
+            $sql = "INSERT INTO configuracion_arbitros (id_torneo, monto_por_partido, monto_central, monto_asistente, monto_cuarto, estado) 
+                    VALUES (?, ?, ?, ?, ?, ?)";
+            // Keeping monto_por_partido for backward compatibility if needed, using central fee as base
+            $arrValues = array($idTorneo, $montoCentral, $montoCentral, $montoAsistente, $montoCuarto, 1);
             return $this->insert($sql, $arrValues);
         }
     }
@@ -130,6 +131,7 @@ class ArbitrosModel extends Mysql
                     pa.id_partido,
                     pa.id_arbitro,
                     pa.monto,
+                    pa.rol,
                     pa.fecha_pago,
                     pa.estado,
                     pa.numero_comprobante,
@@ -182,33 +184,71 @@ class ArbitrosModel extends Mysql
     }
 
     /**
-     * Genera pago pendiente a árbitro por partido
+     * Gestión Dinámica de Roles
      */
-    public function generarPagoPartido($idPartido, $idArbitro, $idTorneo, $usuarioRegistro)
+    public function getRoles($idTorneo)
     {
-        // Obtener configuración del torneo
-        $config = $this->getConfiguracion($idTorneo);
+        $sql = "SELECT * FROM arbitro_roles WHERE id_torneo = $idTorneo AND estado = 1 ORDER BY monto DESC";
+        return $this->select_all($sql);
+    }
 
-        if (!$config) {
-            return false; // No hay configuración
+    public function guardarRol($idTorneo, $nombre, $monto, $idRol = 0)
+    {
+        if ($idRol > 0) {
+            $sql = "UPDATE arbitro_roles SET nombre = ?, monto = ? WHERE id_rol = ?";
+            return $this->update($sql, [$nombre, $monto, $idRol]);
+        } else {
+            $sql = "INSERT INTO arbitro_roles (id_torneo, nombre, monto) VALUES (?, ?, ?)";
+            return $this->insert($sql, [$idTorneo, $nombre, $monto]);
+        }
+    }
+
+    public function eliminarRol($idRol)
+    {
+        $sql = "UPDATE arbitro_roles SET estado = 0 WHERE id_rol = ?";
+        return $this->update($sql, [$idRol]);
+    }
+
+    /**
+     * Genera pagos pendientes basados en la asignación dinámica del partido
+     */
+    public function generarPagoPartido($idPartido, $idTorneo, $usuarioRegistro)
+    {
+        // 1. Obtener la terna asignada al partido junto con sus tarifas de ese momento
+        $sql = "SELECT pa.*, r.nombre as rol_nombre, r.monto as rol_monto 
+                FROM partidos_arbitros pa
+                INNER JOIN arbitro_roles r ON pa.id_rol = r.id_rol
+                WHERE pa.id_partido = $idPartido";
+
+        $asignaciones = $this->select_all($sql);
+        if (!$asignaciones)
+            return false;
+
+        $totalGenerados = 0;
+
+        foreach ($asignaciones as $asig) {
+            $idArbitro = intval($asig['id_arbitro']);
+            $monto = $asig['rol_monto'];
+            $rolNombre = $asig['rol_nombre'];
+
+            // Verificar si ya existe el pago
+            $sqlCheck = "SELECT id_pago FROM pagos_arbitros 
+                        WHERE id_partido = $idPartido 
+                        AND id_arbitro = $idArbitro 
+                        AND rol = '$rolNombre'";
+
+            $existe = $this->select($sqlCheck);
+
+            if (!$existe) {
+                $sql = "INSERT INTO pagos_arbitros (id_partido, id_arbitro, monto, rol, estado, usuario_registro) 
+                        VALUES (?, ?, ?, ?, 'PENDIENTE', ?)";
+                $arrValues = array($idPartido, $idArbitro, $monto, $rolNombre, $usuarioRegistro);
+                $this->insert($sql, $arrValues);
+                $totalGenerados++;
+            }
         }
 
-        $monto = $config['monto_por_partido'];
-
-        // Verificar si ya existe el pago
-        $sqlCheck = "SELECT id_pago FROM pagos_arbitros WHERE id_partido = $idPartido";
-        $existe = $this->select($sqlCheck);
-
-        if ($existe) {
-            return false; // Ya existe el pago
-        }
-
-        // Crear pago pendiente
-        $sql = "INSERT INTO pagos_arbitros (id_partido, id_arbitro, monto, estado, usuario_registro) 
-                VALUES (?, ?, ?, ?, ?)";
-        $arrValues = array($idPartido, $idArbitro, $monto, 'PENDIENTE', $usuarioRegistro);
-
-        return $this->insert($sql, $arrValues);
+        return $totalGenerados > 0;
     }
 
     /**

@@ -2,8 +2,7 @@
 // MÓDULO DE SANCIONES ECONÓMICAS
 // ============================================
 
-const API_URL = app_config.api_url;
-const token = app_config.token;
+
 let torneoActual = null;
 let tablaSanciones = null;
 let configActual = null;
@@ -44,11 +43,7 @@ function inicializarEventos() {
 
 async function cargarTorneos() {
     try {
-        const response = await fetch(`${API_URL}Posiciones/torneos`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-
-        const result = await response.json();
+        const result = await fetchAPI('Posiciones/torneos');
 
         if (result.status) {
             const select = document.getElementById('selectTorneo');
@@ -76,11 +71,7 @@ async function cargarTorneos() {
 
 async function cargarConfiguracion() {
     try {
-        const response = await fetch(`${API_URL}Sanciones/configuracion/${torneoActual}`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-
-        const result = await response.json();
+        const result = await fetchAPI(`Sanciones/configuracion/${torneoActual}`);
 
         if (result.status && result.data) {
             configActual = result.data;
@@ -90,14 +81,13 @@ async function cargarConfiguracion() {
         } else {
             configActual = null;
             document.getElementById('configInfo').style.display = 'none';
-            Swal.fire({
-                icon: 'warning',
-                title: 'Sin Configuración',
-                text: 'Este torneo no tiene configuración de sanciones económicas. ¿Desea configurarlo ahora?',
-                showCancelButton: true,
-                confirmButtonText: 'Sí, configurar',
-                cancelButtonText: 'Más tarde'
-            }).then((result) => {
+            configActual = null;
+            document.getElementById('configInfo').style.display = 'none';
+            swalConfirm(
+                'Sin Configuración',
+                'Este torneo no tiene configuración de sanciones económicas. ¿Desea configurarlo ahora?',
+                'Sí, configurar'
+            ).then((result) => {
                 if (result.isConfirmed) {
                     abrirConfiguracion();
                 }
@@ -110,11 +100,7 @@ async function cargarConfiguracion() {
 
 async function cargarResumen() {
     try {
-        const response = await fetch(`${API_URL}Sanciones/resumen/${torneoActual}`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-
-        const result = await response.json();
+        const result = await fetchAPI(`Sanciones/resumen/${torneoActual}`);
 
         if (result.status) {
             let total = 0;
@@ -138,11 +124,7 @@ async function cargarResumen() {
 
 async function cargarSanciones() {
     try {
-        const response = await fetch(`${API_URL}Sanciones/listar/${torneoActual}`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-
-        const result = await response.json();
+        const result = await fetchAPI(`Sanciones/listar/${torneoActual}`);
 
         if (result.status) {
             renderizarTabla(result.data);
@@ -155,11 +137,7 @@ async function cargarSanciones() {
 
 async function cargarEquipos() {
     try {
-        const response = await fetch(`${API_URL}Equipos/listarTorneo/${torneoActual}`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-
-        const result = await response.json();
+        const result = await fetchAPI(`Equipos/listarTorneo/${torneoActual}`);
 
         if (result.status) {
             const selectFiltro = document.getElementById('filtroEquipo');
@@ -186,11 +164,7 @@ async function cargarJugadoresEquipo(idEquipo) {
     }
 
     try {
-        const response = await fetch(`${API_URL}Jugadores/listarEquipo/${idEquipo}`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-
-        const result = await response.json();
+        const result = await fetchAPI(`Jugadores/listarEquipo/${idEquipo}`);
 
         if (result.status) {
             const select = document.getElementById('selectJugadorSancion');
@@ -304,34 +278,22 @@ async function guardarConfiguracion() {
     };
 
     try {
-        const response = await fetch(`${API_URL}Sanciones/guardarConfiguracion`, {
+        const result = await fetchAPI('Sanciones/guardarConfiguracion', {
             method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-            },
             body: JSON.stringify(data)
         });
 
-        const result = await response.json();
-
         if (result.status) {
-            Swal.fire({
-                icon: 'success',
-                title: '¡Éxito!',
-                text: 'Configuración guardada correctamente',
-                timer: 2000,
-                showConfirmButton: false
-            });
+            swalSuccess('Configuración guardada correctamente', '¡Éxito!');
 
             bootstrap.Modal.getInstance(document.getElementById('modalConfiguracion')).hide();
             cargarConfiguracion();
         } else {
-            mostrarError(result.msg || 'Error al guardar la configuración');
+            swalError(result.msg || 'Error al guardar la configuración');
         }
     } catch (error) {
         console.error('Error:', error);
-        mostrarError('Error al guardar la configuración');
+        swalError('Error al guardar la configuración');
     }
 }
 
@@ -372,35 +334,23 @@ async function guardarSancion() {
     };
 
     try {
-        const response = await fetch(`${API_URL}Sanciones/crear`, {
+        const result = await fetchAPI('Sanciones/crear', {
             method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-            },
             body: JSON.stringify(data)
         });
 
-        const result = await response.json();
-
         if (result.status) {
-            Swal.fire({
-                icon: 'success',
-                title: '¡Éxito!',
-                text: 'Sanción registrada correctamente',
-                timer: 2000,
-                showConfirmButton: false
-            });
+            swalSuccess('Sanción registrada correctamente', '¡Éxito!');
 
             bootstrap.Modal.getInstance(document.getElementById('modalSancion')).hide();
             cargarResumen();
             cargarSanciones();
         } else {
-            mostrarError(result.msg || 'Error al guardar la sanción');
+            swalError(result.msg || 'Error al guardar la sanción');
         }
     } catch (error) {
         console.error('Error:', error);
-        mostrarError('Error al registrar la sanción');
+        swalError('Error al registrar la sanción');
     }
 }
 
@@ -422,15 +372,12 @@ function anularSancion(id) {
                 Swal.showValidationMessage('Debe ingresar un motivo');
                 return false;
             }
-            return fetch(`${API_URL}Sanciones/anular/${id}`, {
+            // Usamos fetchAPI pero debemos adaptarlo para Swal.preConfirm que espera promesas
+            // Como fetchAPI ya devuelve response.json(), lo usamos directo
+            return fetchAPI(`Sanciones/anular/${id}`, {
                 method: 'PUT',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                },
                 body: JSON.stringify({ observaciones: motivo })
             })
-                .then(response => response.json())
                 .then(data => {
                     if (!data.status) throw new Error(data.msg);
                     return data;
@@ -442,11 +389,7 @@ function anularSancion(id) {
         allowOutsideClick: () => !Swal.isLoading()
     }).then((result) => {
         if (result.isConfirmed) {
-            Swal.fire({
-                icon: 'success',
-                title: 'Anulada',
-                text: 'La sanción ha sido anulada correctamente'
-            });
+            swalSuccess('La sanción ha sido anulada correctamente', 'Anulada');
             cargarResumen();
             cargarSanciones();
         }
@@ -503,28 +446,4 @@ function getTipoBadge(tipo) {
     return badges[tipo] || `<span class="badge bg-light text-dark border">${tipo}</span>`;
 }
 
-function formatMoney(amount) {
-    return new Intl.NumberFormat('es-CO', {
-        style: 'currency',
-        currency: 'COP',
-        minimumFractionDigits: 0
-    }).format(amount || 0);
-}
 
-function formatDate(dateString) {
-    if (!dateString) return '-';
-    const date = new Date(dateString + 'T00:00:00');
-    return date.toLocaleDateString('es-CO', {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit'
-    });
-}
-
-function mostrarError(mensaje) {
-    Swal.fire({
-        icon: 'error',
-        title: 'Error',
-        text: mensaje
-    });
-}

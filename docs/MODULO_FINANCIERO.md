@@ -1,8 +1,8 @@
 # 💰 Módulo Financiero - Global Cup
 
-**Versión:** 1.1 (Desarrollo en curso)  
+**Versión:** 1.2 (Desarrollo en curso)  
 **Fecha:** 28 de Enero, 2026  
-**Estado:** � Fase 4: Tesorería (Ajustando Pagos Parciales)
+**Estado:** ✅ Fase 5: Arbitraje Dinámico (COMPLETADA)
 
 ---
 
@@ -884,29 +884,29 @@ app/
 - [x] Integrar con cuotas y sanciones (Soporte Pagos Parciales)
 - [x] Automatización de envío de recibos por email (PHPMailer + Dompdf)
 
-### Fase 5: Módulo de Árbitros (Semana 5)
-- [ ] Implementar catálogo de árbitros
-- [ ] Implementar configuración de pagos
-- [ ] Crear interfaz de gestión
-- [ ] Integrar con partidos
+### Fase 5: Módulo de Árbitros (Completado)
+- [x] Implementar catálogo de árbitros
+- [x] Implementar configuración de pagos (Roles y Tarifas Dinámicas)
+- [x] Crear interfaz de gestión (Tesorería de Árbitros)
+- [x] Integrar con partidos (Terna Arbitral Múltiple)
 
-### Fase 6: Módulo de Gastos (Semana 6)
-- [ ] Implementar registro de gastos
-- [ ] Crear interfaz de gestión
-- [ ] Implementar carga de comprobantes
-- [ ] Crear categorías de gastos
+### Fase 6: Módulo de Gastos (Completado)
+- [x] Implementar registro de gastos
+- [x] Crear interfaz de gestión
+- [x] Implementar carga de comprobantes
+- [x] Crear categorías de gastos
 
-### Fase 7: Reportes y Balance (Semana 7)
-- [ ] Implementar cálculo de balance
-- [ ] Crear reportes de recaudos
-- [ ] Crear reportes de gastos
-- [ ] Implementar gráficas
+### Fase 7: Reportes y Balance (Completado)
+- [x] Implementar cálculo de balance consolidado
+- [x] Crear reportes de recaudos e ingresos
+- [x] Crear reportes de gastos y egresos
+- [x] Implementar gráficas interactivas (Chart.js)
 
 ### Fase 8: Exportación y Finalización (Semana 8)
-- [ ] Implementar exportación a PDF
+- [x] Implementar exportación a PDF (Vía Impresión Optimizada)
 - [ ] Implementar exportación a Excel
-- [ ] Pruebas integrales
-- [ ] Documentación de usuario
+- [ ] Pruebas integrales de flujo financiero
+- [ ] Documentación de usuario final
 
 ---
 
@@ -961,5 +961,5 @@ app/
 ---
 
 **Última actualización:** 28 de Enero, 2026  
-**Versión del documento:** 1.1  
-**Estado:** � Fase 4: Tesorería (Ajustando Pagos Parciales)
+**Versión del documento:** 1.5  
+**Estado:** ✅ Fase 7: Reportes y Balances (COMPLETADA)

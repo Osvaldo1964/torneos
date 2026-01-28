@@ -51,4 +51,4 @@ class UsuariosModel extends Mysql
         return $this->select($sql);
     }
 }
-?>
+

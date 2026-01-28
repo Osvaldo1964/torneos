@@ -2,8 +2,7 @@
 // MÓDULO DE CUOTAS MENSUALES
 // ============================================
 
-const API_URL = app_config.api_url;
-const token = app_config.token;
+
 let torneoActual = null;
 let tablaCuotas = null;
 let configActual = null;
@@ -44,11 +43,7 @@ function inicializarEventos() {
 
 async function cargarTorneos() {
     try {
-        const response = await fetch(`${API_URL}Posiciones/torneos`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-
-        const result = await response.json();
+        const result = await fetchAPI('Posiciones/torneos');
 
         if (result.status) {
             const select = document.getElementById('selectTorneo');
@@ -76,11 +71,7 @@ async function cargarTorneos() {
 
 async function cargarConfiguracion() {
     try {
-        const response = await fetch(`${API_URL}Cuotas/configuracion/${torneoActual}`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-
-        const result = await response.json();
+        const result = await fetchAPI(`Cuotas/configuracion/${torneoActual}`);
 
         if (result.status && result.data) {
             configActual = result.data;
@@ -90,14 +81,11 @@ async function cargarConfiguracion() {
         } else {
             configActual = null;
             document.getElementById('configInfo').style.display = 'none';
-            Swal.fire({
-                icon: 'warning',
-                title: 'Sin Configuración',
-                text: 'Este torneo no tiene configuración de cuotas. ¿Desea configurarlo ahora?',
-                showCancelButton: true,
-                confirmButtonText: 'Sí, configurar',
-                cancelButtonText: 'Más tarde'
-            }).then((result) => {
+            swalConfirm(
+                'Sin Configuración',
+                'Este torneo no tiene configuración de cuotas. ¿Desea configurarlo ahora?',
+                'Sí, configurar'
+            ).then((result) => {
                 if (result.isConfirmed) {
                     abrirConfiguracion();
                 }
@@ -110,11 +98,7 @@ async function cargarConfiguracion() {
 
 async function cargarResumen() {
     try {
-        const response = await fetch(`${API_URL}Cuotas/resumen/${torneoActual}`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-
-        const result = await response.json();
+        const result = await fetchAPI(`Cuotas/resumen/${torneoActual}`);
 
         if (result.status) {
             let total = 0;
@@ -141,11 +125,7 @@ async function cargarResumen() {
 
 async function cargarCuotas() {
     try {
-        const response = await fetch(`${API_URL}Cuotas/listar/${torneoActual}`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-
-        const result = await response.json();
+        const result = await fetchAPI(`Cuotas/listar/${torneoActual}`);
 
         if (result.status) {
             renderizarTabla(result.data);
@@ -251,34 +231,22 @@ async function guardarConfiguracion() {
     };
 
     try {
-        const response = await fetch(`${API_URL}Cuotas/guardarConfiguracion`, {
+        const result = await fetchAPI('Cuotas/guardarConfiguracion', {
             method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-            },
             body: JSON.stringify(data)
         });
 
-        const result = await response.json();
-
         if (result.status) {
-            Swal.fire({
-                icon: 'success',
-                title: '¡Éxito!',
-                text: 'Configuración guardada correctamente',
-                timer: 2000,
-                showConfirmButton: false
-            });
+            swalSuccess('Configuración guardada correctamente', '¡Éxito!');
 
             bootstrap.Modal.getInstance(document.getElementById('modalConfiguracion')).hide();
             cargarConfiguracion();
         } else {
-            mostrarError(result.msg || 'Error al guardar la configuración');
+            swalError(result.msg || 'Error al guardar la configuración');
         }
     } catch (error) {
         console.error('Error:', error);
-        mostrarError('Error al guardar la configuración');
+        swalError('Error al guardar la configuración');
     }
 }
 
@@ -299,50 +267,28 @@ async function generarCuotas() {
         return;
     }
 
-    Swal.fire({
-        title: '¿Generar cuotas mensuales?',
-        text: 'Se generarán las cuotas para todos los jugadores inscritos en las nóminas de este torneo basado en las fechas de inicio y fin del mismo.',
-        icon: 'info',
-        showCancelButton: true,
-        confirmButtonText: 'Sí, generar',
-        cancelButtonText: 'Cancelar',
-        confirmButtonColor: '#28a745'
-    }).then(async (result) => {
+    swalConfirm(
+        '¿Generar cuotas mensuales?',
+        'Se generarán las cuotas para todos los jugadores inscritos en las nóminas de este torneo basado en las fechas de inicio y fin del mismo.',
+        'Sí, generar'
+    ).then(async (result) => {
         if (result.isConfirmed) {
-            Swal.fire({
-                title: 'Procesando...',
-                text: 'Generando cuotas para los jugadores...',
-                allowOutsideClick: false,
-                didOpen: () => {
-                    Swal.showLoading();
-                }
-            });
+            swalLoading('Procesando...', 'Generando cuotas para los jugadores...');
 
             try {
-                const response = await fetch(`${API_URL}Cuotas/generarMasivas/${torneoActual}`, {
-                    method: 'POST',
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-
-                const data = await response.json();
+                const data = await fetchAPI(`Cuotas/generarMasivas/${torneoActual}`, { method: 'POST' });
 
                 if (data.status) {
-                    Swal.fire({
-                        icon: 'success',
-                        title: '¡Generación Completa!',
-                        text: data.msg,
-                        timer: 3000,
-                        showConfirmButton: true
-                    });
+                    swalSuccess(data.msg, '¡Generación Completa!');
 
                     cargarResumen();
                     cargarCuotas();
                 } else {
-                    mostrarError(data.msg || 'Error al generar las cuotas');
+                    swalError(data.msg || 'Error al generar las cuotas');
                 }
             } catch (error) {
                 console.error('Error:', error);
-                mostrarError('Error en el servidor al intentar generar las cuotas');
+                swalError('Error en el servidor al intentar generar las cuotas');
             }
         }
     });
@@ -354,40 +300,26 @@ async function marcarVencidas() {
         return;
     }
 
-    Swal.fire({
-        title: '¿Marcar cuotas vencidas?',
-        text: 'Se actualizarán todas las cuotas pendientes con fecha de vencimiento pasada',
-        icon: 'question',
-        showCancelButton: true,
-        confirmButtonText: 'Sí, marcar',
-        cancelButtonText: 'Cancelar'
-    }).then(async (result) => {
+    swalConfirm(
+        '¿Marcar cuotas vencidas?',
+        'Se actualizarán todas las cuotas pendientes con fecha de vencimiento pasada',
+        'Sí, marcar'
+    ).then(async (result) => {
         if (result.isConfirmed) {
             try {
-                const response = await fetch(`${API_URL}Cuotas/marcarVencidas/${torneoActual}`, {
-                    method: 'PUT',
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-
-                const data = await response.json();
+                const data = await fetchAPI(`Cuotas/marcarVencidas/${torneoActual}`, { method: 'PUT' });
 
                 if (data.status) {
-                    Swal.fire({
-                        icon: 'success',
-                        title: '¡Actualizado!',
-                        text: 'Cuotas vencidas actualizadas',
-                        timer: 2000,
-                        showConfirmButton: false
-                    });
+                    swalSuccess('Cuotas vencidas actualizadas', '¡Actualizado!');
 
                     cargarResumen();
                     cargarCuotas();
                 } else {
-                    mostrarError(data.msg || 'Error al marcar cuotas vencidas');
+                    swalError(data.msg || 'Error al marcar cuotas vencidas');
                 }
             } catch (error) {
                 console.error('Error:', error);
-                mostrarError('Error al marcar cuotas vencidas');
+                swalError('Error al marcar cuotas vencidas');
             }
         }
     });
@@ -447,28 +379,4 @@ function getMesNombre(mes) {
     return meses[mes - 1] || mes;
 }
 
-function formatMoney(amount) {
-    return new Intl.NumberFormat('es-CO', {
-        style: 'currency',
-        currency: 'COP',
-        minimumFractionDigits: 0
-    }).format(amount || 0);
-}
 
-function formatDate(dateString) {
-    if (!dateString) return '-';
-    const date = new Date(dateString + 'T00:00:00');
-    return date.toLocaleDateString('es-CO', {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit'
-    });
-}
-
-function mostrarError(mensaje) {
-    Swal.fire({
-        icon: 'error',
-        title: 'Error',
-        text: mensaje
-    });
-}

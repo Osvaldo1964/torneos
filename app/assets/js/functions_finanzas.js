@@ -1,9 +1,4 @@
-// ============================================
-// DASHBOARD FINANCIERO
-// ============================================
 
-const API_URL = app_config.api_url;
-const token = app_config.token;
 
 document.addEventListener('DOMContentLoaded', () => {
     cargarTorneos();
@@ -12,13 +7,9 @@ document.addEventListener('DOMContentLoaded', () => {
 // Cargar lista de torneos
 async function cargarTorneos() {
     try {
-        const response = await fetch(`${API_URL}Posiciones/torneos`, {
-            headers: {
-                'Authorization': `Bearer ${token}`
-            }
-        });
+        const result = await fetchAPI('Posiciones/torneos');
 
-        const result = await response.json();
+
 
         if (result.status) {
             const select = document.getElementById('selectTorneo');
@@ -59,13 +50,7 @@ async function cargarTorneos() {
 // Cargar balance del torneo
 async function cargarBalance(idTorneo) {
     try {
-        const response = await fetch(`${API_URL}Finanzas/balance/${idTorneo}`, {
-            headers: {
-                'Authorization': `Bearer ${token}`
-            }
-        });
-
-        const result = await response.json();
+        const result = await fetchAPI(`Finanzas/balance/${idTorneo}`);
 
         if (result.status) {
             const balance = result.data;
@@ -94,19 +79,8 @@ async function cargarBalance(idTorneo) {
         }
     } catch (error) {
         console.error('Error al cargar balance:', error);
-        Swal.fire({
-            icon: 'error',
-            title: 'Error',
-            text: 'No se pudo cargar el balance del torneo'
-        });
+        swalError('No se pudo cargar el balance del torneo');
     }
 }
 
-// Formatear moneda
-function formatMoney(amount) {
-    return new Intl.NumberFormat('es-CO', {
-        style: 'currency',
-        currency: 'COP',
-        minimumFractionDigits: 0
-    }).format(amount || 0);
-}
+

@@ -56,11 +56,115 @@ function formatMoney(amount) {
  */
 function formatDate(dateString) {
     if (!dateString) return '-';
-    // Forzamos la zona horaria local para evitar saltos de día
-    const date = new Date(dateString + 'T00:00:00');
+    // Si ya trae hora (YYYY-MM-DD HH:mm:ss), reemplazamos espacio por T para parseo ISO
+    let cleanDate = dateString.includes(' ') ? dateString.replace(' ', 'T') : dateString + 'T00:00:00';
+    const date = new Date(cleanDate);
+
+    if (isNaN(date.getTime())) return dateString; // Si falla, devolvemos el string original
+
     return date.toLocaleDateString('es-CO', {
         year: 'numeric',
         month: '2-digit',
         day: '2-digit'
+    });
+}
+
+/**
+ * Realiza una petición fetch estándar a la API con manejo de errores y token
+ * @param {string} endpoint Ruta del endpoint (ej: 'Finanzas/balance')
+ * @param {object} options Opciones de fetch (method, body, etc)
+ */
+async function fetchAPI(endpoint, options = {}) {
+    const defaultHeaders = {
+        'Authorization': `Bearer ${localStorage.getItem('gc_token')}`
+    };
+
+    // Si enviamos body JSON, agregamos el content-type
+    if (options.body && typeof options.body === 'string') {
+        defaultHeaders['Content-Type'] = 'application/json';
+    }
+
+    const config = {
+        ...options,
+        headers: {
+            ...defaultHeaders,
+            ...options.headers
+        }
+    };
+
+    try {
+        const response = await fetch(`${app_config.api_url}${endpoint}`, config);
+
+        if (response.status === 401) {
+            Swal.fire({
+                title: 'Sesión Expirada',
+                text: 'Tu sesión ha caducado. Por favor inicia sesión nuevamente.',
+                icon: 'warning',
+                confirmButtonText: 'Ir al Login',
+                allowOutsideClick: false
+            }).then(() => {
+                window.location.href = '../login.php';
+            });
+            throw new Error('Sesión Expirada');
+        }
+
+        return await response.json();
+    } catch (error) {
+        console.error(`API Error (${endpoint}):`, error);
+        throw error;
+    }
+}
+
+/**
+ * Muestra alerta de éxito
+ */
+function swalSuccess(msg, title = 'Éxito') {
+    return Swal.fire({
+        title: title,
+        text: msg,
+        icon: 'success',
+        confirmButtonColor: '#3085d6'
+    });
+}
+
+/**
+ * Muestra alerta de error
+ */
+function swalError(msg, title = 'Error') {
+    return Swal.fire({
+        title: title,
+        text: msg,
+        icon: 'error',
+        confirmButtonColor: '#d33'
+    });
+}
+
+/**
+ * Muestra alerta de carga
+ */
+function swalLoading(title = 'Procesando...', text = 'Por favor espere') {
+    Swal.fire({
+        title: title,
+        text: text,
+        allowOutsideClick: false,
+        didOpen: () => {
+            Swal.showLoading();
+        }
+    });
+}
+
+/**
+ * Muestra confirmación
+ */
+function swalConfirm(title, text, confirmText = 'Sí, continuar') {
+    return Swal.fire({
+        title: title,
+        text: text,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: confirmText,
+        cancelButtonText: 'Cancelar'
     });
 }

@@ -59,4 +59,4 @@ class Registro extends Controllers
         }
     }
 }
-?>
+

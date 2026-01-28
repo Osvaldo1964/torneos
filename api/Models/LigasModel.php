@@ -14,4 +14,4 @@ class LigasModel extends Mysql
         return $this->insert($sql, $arrData);
     }
 }
-?>
+

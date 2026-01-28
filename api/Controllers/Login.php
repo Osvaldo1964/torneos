@@ -45,4 +45,4 @@ class Login extends Controllers
         }
     }
 }
-?>
+

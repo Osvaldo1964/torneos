@@ -2,8 +2,6 @@
 // FUNCIONES PARA MÓDULO DE POSICIONES
 // ========================================
 
-// Configuración de URLs
-const API_URL = app_config.api_url;
 const BASE_URL = app_config.base_url;
 
 let currentIdGrupo = null;
@@ -19,13 +17,7 @@ document.addEventListener('DOMContentLoaded', function () {
  */
 async function cargarTorneosPosiciones() {
     try {
-        const response = await fetch(`${API_URL}Posiciones/torneos`, {
-            headers: {
-                'Authorization': `Bearer ${getToken()}`
-            }
-        });
-
-        const result = await response.json();
+        const result = await fetchAPI('Posiciones/torneos');
 
         if (result.status) {
             const selectTorneo = document.getElementById('selectTorneoPosiciones');
@@ -51,7 +43,7 @@ async function cargarTorneosPosiciones() {
         }
     } catch (error) {
         console.error('Error al cargar torneos:', error);
-        mostrarAlerta('Error al cargar torneos', 'error');
+        swalError('Error al cargar torneos');
     }
 }
 
@@ -75,13 +67,9 @@ async function cargarFasesPosiciones() {
     }
 
     try {
-        const response = await fetch(`${API_URL}Posiciones/fases/${idTorneo}`, {
-            headers: {
-                'Authorization': `Bearer ${getToken()}`
-            }
-        });
+        const result = await fetchAPI(`Posiciones/fases/${idTorneo}`);
 
-        const result = await response.json();
+
 
         if (result.status && result.data.length > 0) {
             result.data.forEach(fase => {
@@ -91,11 +79,11 @@ async function cargarFasesPosiciones() {
                 selectFase.appendChild(option);
             });
         } else {
-            mostrarAlerta('Este torneo no tiene fases configuradas', 'warning');
+            swalError('Este torneo no tiene fases configuradas', 'Atención');
         }
     } catch (error) {
         console.error('Error al cargar fases:', error);
-        mostrarAlerta('Error al cargar fases', 'error');
+        swalError('Error al cargar fases');
     }
 }
 
@@ -116,13 +104,7 @@ async function cargarGruposPosiciones() {
     }
 
     try {
-        const response = await fetch(`${API_URL}Posiciones/grupos/${idFase}`, {
-            headers: {
-                'Authorization': `Bearer ${getToken()}`
-            }
-        });
-
-        const result = await response.json();
+        const result = await fetchAPI(`Posiciones/grupos/${idFase}`);
 
         if (result.status && result.data.length > 0) {
             result.data.forEach(grupo => {
@@ -132,11 +114,11 @@ async function cargarGruposPosiciones() {
                 selectGrupo.appendChild(option);
             });
         } else {
-            mostrarAlerta('Esta fase no tiene grupos configurados', 'warning');
+            swalError('Esta fase no tiene grupos configurados', 'Atención');
         }
     } catch (error) {
         console.error('Error al cargar grupos:', error);
-        mostrarAlerta('Error al cargar grupos', 'error');
+        swalError('Error al cargar grupos');
     }
 }
 
@@ -148,31 +130,27 @@ async function cargarTablaPosiciones() {
     const idGrupo = selectGrupo.value;
 
     if (!idGrupo) {
-        mostrarAlerta('Por favor seleccione un grupo', 'warning');
+        swalError('Por favor seleccione un grupo', 'Atención');
         return;
     }
 
     currentIdGrupo = idGrupo;
 
     try {
-        const response = await fetch(`${API_URL}Posiciones/tabla/${idGrupo}`, {
-            headers: {
-                'Authorization': `Bearer ${getToken()}`
-            }
-        });
+        const result = await fetchAPI(`Posiciones/tabla/${idGrupo}`);
 
-        const result = await response.json();
+
 
         if (result.status) {
             mostrarInfoGrupo(result.data.info);
             renderizarTablaPosiciones(result.data.tabla);
             cargarGoleadores(idGrupo);
         } else {
-            mostrarAlerta(result.msg || 'Error al cargar tabla de posiciones', 'error');
+            swalError(result.msg || 'Error al cargar tabla de posiciones');
         }
     } catch (error) {
         console.error('Error al cargar tabla:', error);
-        mostrarAlerta('Error al cargar tabla de posiciones', 'error');
+        swalError('Error al cargar tabla de posiciones');
     }
 }
 
@@ -293,13 +271,7 @@ function calcularEstadisticasAdicionales(tabla) {
  */
 async function cargarGoleadores(idGrupo) {
     try {
-        const response = await fetch(`${API_URL}Posiciones/goleadores/${idGrupo}`, {
-            headers: {
-                'Authorization': `Bearer ${getToken()}`
-            }
-        });
-
-        const result = await response.json();
+        const result = await fetchAPI(`Posiciones/goleadores/${idGrupo}`);
 
         if (result.status) {
             renderizarGoleadores(result.data);
@@ -370,25 +342,19 @@ function renderizarGoleadores(goleadores) {
  */
 async function verRachaEquipo(idEquipo, nombreEquipo) {
     if (!currentIdGrupo) {
-        mostrarAlerta('Error: Grupo no seleccionado', 'error');
+        swalError('Error: Grupo no seleccionado');
         return;
     }
 
     try {
-        const response = await fetch(`${API_URL}Posiciones/racha/${idEquipo}/${currentIdGrupo}`, {
-            headers: {
-                'Authorization': `Bearer ${getToken()}`
-            }
-        });
-
-        const result = await response.json();
+        const result = await fetchAPI(`Posiciones/racha/${idEquipo}/${currentIdGrupo}`);
 
         if (result.status) {
             mostrarModalRacha(nombreEquipo, result.data);
         }
     } catch (error) {
         console.error('Error al cargar racha:', error);
-        mostrarAlerta('Error al cargar racha del equipo', 'error');
+        swalError('Error al cargar racha del equipo');
     }
 }
 
@@ -467,12 +433,12 @@ function limpiarTablaPosiciones() {
  */
 function exportarPDF() {
     if (!currentIdGrupo) {
-        mostrarAlerta('Primero debe cargar una tabla de posiciones', 'warning');
+        swalError('Primero debe cargar una tabla de posiciones', 'Atención');
         return;
     }
 
     // Implementación con jsPDF (requiere incluir la librería)
-    mostrarAlerta('Función de exportación a PDF en desarrollo', 'info');
+    swalError('Función de exportación a PDF en desarrollo', 'Información');
 }
 
 /**
@@ -480,32 +446,12 @@ function exportarPDF() {
  */
 function exportarExcel() {
     if (!currentIdGrupo) {
-        mostrarAlerta('Primero debe cargar una tabla de posiciones', 'warning');
+        swalError('Primero debe cargar una tabla de posiciones', 'Atención');
         return;
     }
 
     // Implementación con SheetJS (requiere incluir la librería)
-    mostrarAlerta('Función de exportación a Excel en desarrollo', 'info');
+    swalError('Función de exportación a Excel en desarrollo', 'Información');
 }
 
-/**
- * Muestra alertas con SweetAlert2
- */
-function mostrarAlerta(mensaje, tipo = 'info') {
-    Swal.fire({
-        icon: tipo,
-        title: mensaje,
-        toast: true,
-        position: 'top-end',
-        showConfirmButton: false,
-        timer: 3000,
-        timerProgressBar: true
-    });
-}
 
-/**
- * Obtiene el token JWT del localStorage
- */
-function getToken() {
-    return localStorage.getItem('gc_token') || '';
-}

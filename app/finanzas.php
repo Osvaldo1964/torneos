@@ -108,7 +108,8 @@ require_once('template/header.php');
                             <small class="text-muted">Gestión de cuotas por jugador</small>
                         </div>
                     </div>
-                    <p class="text-muted small mb-3">Configure y administre las cuotas mensuales de los jugadores inscritos en el torneo.</p>
+                    <p class="text-muted small mb-3">Configure y administre las cuotas mensuales de los jugadores
+                        inscritos en el torneo.</p>
                     <a href="finanzas/cuotas.php" class="btn btn-outline-primary btn-sm w-100">
                         <i class="fa-solid fa-arrow-right me-2"></i>Acceder
                     </a>
@@ -128,7 +129,8 @@ require_once('template/header.php');
                             <small class="text-muted">Multas y sanciones económicas</small>
                         </div>
                     </div>
-                    <p class="text-muted small mb-3">Registre y gestione sanciones económicas por tarjetas y otras infracciones.</p>
+                    <p class="text-muted small mb-3">Registre y gestione sanciones económicas por tarjetas y otras
+                        infracciones.</p>
                     <a href="finanzas/sanciones.php" class="btn btn-outline-warning btn-sm w-100">
                         <i class="fa-solid fa-arrow-right me-2"></i>Acceder
                     </a>
@@ -161,7 +163,7 @@ require_once('template/header.php');
                 <div class="card-body p-4">
                     <div class="d-flex align-items-center mb-3">
                         <div class="bg-info bg-opacity-10 p-3 rounded me-3">
-                            <i class="fa-solid fa-whistle text-info fs-3"></i>
+                            <i class="fa-solid fa-gavel text-info fs-3"></i>
                         </div>
                         <div>
                             <h5 class="fw-bold mb-0">Árbitros</h5>
@@ -169,9 +171,9 @@ require_once('template/header.php');
                         </div>
                     </div>
                     <p class="text-muted small mb-3">Administre el catálogo de árbitros y sus pagos por partido.</p>
-                    <button class="btn btn-outline-info btn-sm w-100" onclick="alert('Módulo en desarrollo - Fase 5')">
+                    <a href="finanzas/arbitros.php" class="btn btn-outline-info btn-sm w-100">
                         <i class="fa-solid fa-arrow-right me-2"></i>Acceder
-                    </button>
+                    </a>
                 </div>
             </div>
         </div>
@@ -188,10 +190,11 @@ require_once('template/header.php');
                             <small class="text-muted">Egresos del torneo</small>
                         </div>
                     </div>
-                    <p class="text-muted small mb-3">Registre todos los gastos generales del torneo con comprobantes.</p>
-                    <button class="btn btn-outline-danger btn-sm w-100" onclick="alert('Módulo en desarrollo - Fase 6')">
+                    <p class="text-muted small mb-3">Registre todos los gastos generales del torneo con comprobantes.
+                    </p>
+                    <a href="finanzas/gastos.php" class="btn btn-outline-danger btn-sm w-100">
                         <i class="fa-solid fa-arrow-right me-2"></i>Acceder
-                    </button>
+                    </a>
                 </div>
             </div>
         </div>
@@ -209,9 +212,9 @@ require_once('template/header.php');
                         </div>
                     </div>
                     <p class="text-muted small mb-3">Visualice reportes financieros, balances y gráficas del torneo.</p>
-                    <button class="btn btn-outline-secondary btn-sm w-100" onclick="alert('Módulo en desarrollo - Fase 7')">
+                    <a href="finanzas/reportes.php" class="btn btn-outline-secondary btn-sm w-100">
                         <i class="fa-solid fa-arrow-right me-2"></i>Acceder
-                    </button>
+                    </a>
                 </div>
             </div>
         </div>
@@ -222,12 +225,10 @@ require_once('template/header.php');
         <div class="col-12">
             <div class="card border-0 bg-light">
                 <div class="card-body text-center py-5">
-                    <i class="fa-solid fa-info-circle text-primary fs-1 mb-3"></i>
-                    <h5 class="fw-bold mb-2">Módulo Financiero - Fase 1 Completada</h5>
-                    <p class="text-muted mb-0">La infraestructura del módulo financiero está lista. Seleccione un torneo para ver el balance.</p>
-                    <p class="text-muted small mt-2">
-                        <strong>Estado:</strong> Base de datos ✅ | Modelos ✅ | Controladores ✅ | API ✅
-                    </p>
+                    <i class="fa-solid fa-chart-pie text-primary fs-1 mb-3"></i>
+                    <h5 class="fw-bold mb-2">Resumen Financiero</h5>
+                    <p class="text-muted mb-0">Seleccione un torneo del listado superior para visualizar el balance de
+                        ingresos y egresos.</p>
                 </div>
             </div>
         </div>

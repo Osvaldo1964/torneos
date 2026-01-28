@@ -3,7 +3,7 @@
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
-require 'vendor/autoload.php';
+
 
 class Email
 {
@@ -13,13 +13,13 @@ class Email
         try {
             // Configuración del servidor
             $mail->isSMTP();
-            $mail->Host       = SMTP_HOST;
-            $mail->SMTPAuth   = true;
-            $mail->Username   = SMTP_USER;
-            $mail->Password   = SMTP_PASS;
+            $mail->Host = SMTP_HOST;
+            $mail->SMTPAuth = true;
+            $mail->Username = SMTP_USER;
+            $mail->Password = SMTP_PASS;
             $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
-            $mail->Port       = SMTP_PORT;
-            $mail->CharSet    = 'UTF-8';
+            $mail->Port = SMTP_PORT;
+            $mail->CharSet = 'UTF-8';
 
             // Destinatarios
             $mail->setFrom(SMTP_FROM, SMTP_FROM_NAME);
@@ -28,7 +28,7 @@ class Email
             // Contenido
             $mail->isHTML(true);
             $mail->Subject = $data['asunto'];
-            $mail->Body    = $data['mensaje'];
+            $mail->Body = $data['mensaje'];
 
             if (isset($data['adjunto']) && file_exists($data['adjunto'])) {
                 $mail->addAttachment($data['adjunto'], $data['nombre_adjunto'] ?? 'archivo.pdf');

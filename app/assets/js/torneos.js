@@ -75,24 +75,22 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         try {
-            const response = await fetch(api_url + "Torneos/setTorneo", {
+            // fetchAPI handles Authorization automatically.
+            // FormData is passed directly, so Content-Type header is not forced to JSON.
+            const result = await fetchAPI('Torneos/setTorneo', {
                 method: 'POST',
-                headers: {
-                    'Authorization': 'Bearer ' + token
-                },
                 body: formData
             });
-            const result = await response.json();
 
             if (result.status) {
-                Swal.fire("Éxito", result.msg, "success");
+                swalSuccess(result.msg, "Éxito");
                 bootstrap.Modal.getInstance(document.getElementById('modalTorneo')).hide();
                 tableTorneos.ajax.reload();
             } else {
-                Swal.fire("Error", result.msg, "error");
+                swalError(result.msg, "Error");
             }
         } catch (error) {
-            Swal.fire("Error", "No se pudo procesar la solicitud", "error");
+            swalError("No se pudo procesar la solicitud", "Error");
         }
     };
 });
@@ -107,10 +105,7 @@ function openModal() {
 
 async function fntEdit(id) {
     try {
-        const response = await fetch(api_url + "Torneos/getTorneo/" + id, {
-            headers: { "Authorization": "Bearer " + token }
-        });
-        const result = await response.json();
+        const result = await fetchAPI(`Torneos/getTorneo/${id}`);
         if (result.status) {
             const d = result.data;
             document.getElementById('idTorneo').value = d.id_torneo;
@@ -131,28 +126,22 @@ async function fntEdit(id) {
 }
 
 function fntDel(id) {
-    Swal.fire({
-        title: "¿Eliminar Torneo?",
-        text: "Se ocultará de la lista pero los datos históricos se mantendrán.",
-        icon: "warning",
-        showCancelButton: true,
-        confirmButtonText: "Sí, eliminar"
-    }).then(async (result) => {
+    swalConfirm(
+        "¿Eliminar Torneo?",
+        "Se ocultará de la lista pero los datos históricos se mantendrán.",
+        "Sí, eliminar"
+    ).then(async (result) => {
         if (result.isConfirmed) {
-            const response = await fetch(api_url + "Torneos/delTorneo", {
+            const res = await fetchAPI('Torneos/delTorneo', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': 'Bearer ' + token
-                },
                 body: JSON.stringify({ id_torneo: id })
             });
-            const res = await response.json();
+
             if (res.status) {
-                Swal.fire("Eliminado", res.msg, "success");
+                swalSuccess(res.msg, "Eliminado");
                 tableTorneos.ajax.reload();
             } else {
-                Swal.fire("Error", res.msg, "error");
+                swalError(res.msg, "Error");
             }
         }
     });
@@ -167,16 +156,10 @@ function fntInscribir(id, nombre) {
 async function loadEquiposInscripcion(idTorneo) {
     try {
         // Cargar Disponibles
-        const resDisp = await fetch(`${api_url}Torneos/getDisponibles/${idTorneo}`, {
-            headers: { "Authorization": "Bearer " + token }
-        });
-        const disp = await resDisp.json();
+        const disp = await fetchAPI(`Torneos/getDisponibles/${idTorneo}`);
 
         // Cargar Inscritos
-        const resInsc = await fetch(`${api_url}Torneos/getInscritos/${idTorneo}`, {
-            headers: { "Authorization": "Bearer " + token }
-        });
-        const insc = await resInsc.json();
+        const insc = await fetchAPI(`Torneos/getInscritos/${idTorneo}`);
 
         let htmlDisp = "";
         disp.data.forEach(e => {
@@ -217,30 +200,20 @@ async function loadEquiposInscripcion(idTorneo) {
 
 async function inscribirEquipo(idTorneo, idEquipo) {
     try {
-        const response = await fetch(`${api_url}Torneos/setInscripcion`, {
+        const result = await fetchAPI('Torneos/setInscripcion', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': 'Bearer ' + token
-            },
             body: JSON.stringify({ id_torneo: idTorneo, id_equipo: idEquipo })
         });
-        const result = await response.json();
         if (result.status) loadEquiposInscripcion(idTorneo);
     } catch (error) { }
 }
 
 async function retirarEquipo(idTorneo, idEquipo) {
     try {
-        const response = await fetch(`${api_url}Torneos/delInscripcion`, {
+        const result = await fetchAPI('Torneos/delInscripcion', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': 'Bearer ' + token
-            },
             body: JSON.stringify({ id_torneo: idTorneo, id_equipo: idEquipo })
         });
-        const result = await response.json();
         if (result.status) loadEquiposInscripcion(idTorneo);
     } catch (error) { }
 }

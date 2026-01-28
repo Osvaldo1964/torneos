@@ -1,5 +1,4 @@
-const api_url = app_config.api_url;
-const token = app_config.token;
+
 
 document.addEventListener('DOMContentLoaded', () => {
     fntLoadTorneos();
@@ -32,10 +31,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 async function fntLoadTorneos() {
     try {
-        const response = await fetch(`${api_url}Torneos/getTorneos`, {
-            headers: { "Authorization": "Bearer " + token }
-        });
-        const result = await response.json();
+        const result = await fetchAPI('Torneos/getTorneos');
         let html = '<option value="">Seleccione Torneo</option>';
         result.data.forEach(t => {
             html += `<option value="${t.id_torneo}">${t.nombre} (${t.categoria})</option>`;
@@ -46,10 +42,7 @@ async function fntLoadTorneos() {
 
 async function fntLoadEquiposInscritos(idTorneo) {
     try {
-        const response = await fetch(`${api_url}Torneos/getInscritos/${idTorneo}`, {
-            headers: { "Authorization": "Bearer " + token }
-        });
-        const result = await response.json();
+        const result = await fetchAPI(`Torneos/getInscritos/${idTorneo}`);
         let html = '<option value="">Seleccione Equipo</option>';
         result.data.forEach(e => {
             html += `<option value="${e.id_equipo}">${e.nombre}</option>`;
@@ -63,17 +56,11 @@ async function fntLoadNominaReal(idTorneo, idEquipo) {
         console.log("Cargando nómina para Torneo:", idTorneo, "Equipo:", idEquipo);
 
         // Disponibles para ESTE torneo (que no estén en ningún equipo de este torneo)
-        const resDisp = await fetch(`${api_url}Jugadores/getDisponiblesNomina/${idTorneo}`, {
-            headers: { "Authorization": "Bearer " + token }
-        });
-        const disp = await resDisp.json();
+        const disp = await fetchAPI(`Jugadores/getDisponiblesNomina/${idTorneo}`);
         console.log("Disponibles:", disp);
 
         // Nómina de este equipo para este torneo
-        const resInsc = await fetch(`${api_url}Jugadores/getNomina/${idTorneo}/${idEquipo}`, {
-            headers: { "Authorization": "Bearer " + token }
-        });
-        const insc = await resInsc.json();
+        const insc = await fetchAPI(`Jugadores/getNomina/${idTorneo}/${idEquipo}`);
         console.log("Inscritos:", insc);
 
         let htmlDisp = "";
@@ -120,7 +107,7 @@ async function fntLoadNominaReal(idTorneo, idEquipo) {
 
     } catch (error) {
         console.error("Error cargando nómina:", error);
-        Swal.fire("Error", "Error al cargar los datos de la nómina", "error");
+        swalError("Error al cargar los datos de la nómina");
     }
 }
 
@@ -141,12 +128,8 @@ async function fntInscribirEnNomina(idJugador) {
         const idEquipo = document.getElementById('selectEquipoNomina').value;
 
         try {
-            const response = await fetch(`${api_url}Jugadores/setNomina`, {
+            const result = await fetchAPI('Jugadores/setNomina', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': 'Bearer ' + token
-                },
                 body: JSON.stringify({
                     id_torneo: idTorneo,
                     id_equipo: idEquipo,
@@ -154,11 +137,11 @@ async function fntInscribirEnNomina(idJugador) {
                     dorsal: dorsal
                 })
             });
-            const result = await response.json();
+
             if (result.status) {
                 fntLoadNominaReal(idTorneo, idEquipo);
             } else {
-                Swal.fire("Error", result.msg, "error");
+                swalError(result.msg);
             }
         } catch (error) { }
     }
@@ -169,19 +152,14 @@ async function fntRetirarDeNomina(idJugador) {
     const idEquipo = document.getElementById('selectEquipoNomina').value;
 
     try {
-        const response = await fetch(`${api_url}Jugadores/delNomina`, {
+        const result = await fetchAPI('Jugadores/delNomina', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': 'Bearer ' + token
-            },
             body: JSON.stringify({
                 id_torneo: idTorneo,
                 id_equipo: idEquipo,
                 id_jugador: idJugador
             })
         });
-        const result = await response.json();
         if (result.status) {
             fntLoadNominaReal(idTorneo, idEquipo);
         }

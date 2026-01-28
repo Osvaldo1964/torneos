@@ -31,4 +31,4 @@ class PermisosModel extends Mysql
         return $this->insert($query_insert, $arrData);
     }
 }
-?>
+

@@ -263,6 +263,51 @@ require_once("template/header.php");
     </div>
 </div>
 
+<!-- Modal Programar Partido (Fecha y Árbitro) -->
+<div class="modal fade" id="modalProgramar" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 20px;">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold">🕒 Programar Encuentro</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="formProgramar">
+                <input type="hidden" name="id_partido" id="id_partido_prog">
+                <div class="modal-body p-4">
+                    <div id="infoMatchProg"
+                        class="alert bg-soft-primary text-primary border-0 fw-bold text-center mb-4">
+                        <!-- Dinámico -->
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-muted text-uppercase">Fecha y Hora</label>
+                        <input type="datetime-local" class="form-control" name="fecha_partido" id="fechaProg" required
+                            style="border-radius: 10px;">
+                    </div>
+
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <label class="form-label small fw-bold text-muted text-uppercase mb-0">Terna
+                                Arbitral</label>
+                            <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-3"
+                                onclick="agregarArbitroRow()">
+                                <i class="fa-solid fa-plus me-1"></i> Agregar Árbitro
+                            </button>
+                        </div>
+                        <div id="ternaContainer">
+                            <!-- Filas dinámicas de Árbitro + Rol -->
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary px-4 fw-bold">Guardar Programación</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <style>
     .dashed {
         border-style: dashed !important;

@@ -15,4 +15,4 @@ class LoginModel extends Mysql
         return $this->select($sql);
     }
 }
-?>
+

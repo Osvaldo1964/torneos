@@ -2,8 +2,7 @@
 // MÓDULO DE RECIBOS Y TESORERÍA
 // ============================================
 
-const API_URL = app_config.api_url;
-const token = app_config.token;
+
 let torneoActual = null;
 let torneoSeleccionado = null; // Nuevo: Objeto completo del torneo
 let torneosData = []; // Nuevo: Todos los torneos cargados
@@ -54,10 +53,7 @@ function inicializarEventos() {
 
 async function cargarTorneos() {
     try {
-        const response = await fetch(`${API_URL}Posiciones/torneos`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-        const result = await response.json();
+        const result = await fetchAPI('Posiciones/torneos');
         if (result.status) {
             const select = document.getElementById('selectTorneo');
             if (result.data.is_super_admin) {
@@ -84,10 +80,7 @@ async function cargarTorneos() {
 
 async function cargarPendientes() {
     try {
-        const response = await fetch(`${API_URL}Recibos/pendientes/${torneoActual}`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-        const result = await response.json();
+        const result = await fetchAPI(`Recibos/pendientes/${torneoActual}`);
 
         const tbody = document.querySelector('#tablaPendientesCaja tbody');
         tbody.innerHTML = '';
@@ -228,7 +221,7 @@ function actualizarMontoItem(index, valor) {
     const max = itemsSeleccionados[index].monto_max;
 
     if (v > max) {
-        Swal.fire('Atención', `El monto no puede superar el saldo pendiente (${formatMoney(max)})`, 'warning');
+        swalError(`El monto no puede superar el saldo pendiente (${formatMoney(max)})`, 'Atención');
         itemsSeleccionados[index].monto = max;
     } else if (v <= 0 || isNaN(v)) {
         itemsSeleccionados[index].monto = 1;
@@ -253,7 +246,7 @@ function removerItem(index) {
 async function procesarPago() {
     const pagador = document.getElementById('recPagador').value.trim();
     if (!pagador) {
-        Swal.fire('Error', 'Debe ingresar el nombre del pagador', 'warning');
+        swalError('Debe ingresar el nombre del pagador', 'Atención');
         return;
     }
 
@@ -281,26 +274,17 @@ async function procesarPago() {
             };
 
             try {
-                const response = await fetch(`${API_URL}Recibos/crear`, {
+                const result = await fetchAPI('Recibos/crear', {
                     method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    },
                     body: JSON.stringify(data)
                 });
 
-                const result = await response.json();
-
                 if (result.status) {
-                    Swal.fire({
-                        icon: 'success',
-                        title: '¡Recibo Generado!',
-                        text: 'El pago ha sido registrado correctamente.',
-                        showCancelButton: true,
-                        confirmButtonText: 'Ver/Imprimir Recibo',
-                        cancelButtonText: 'Cerrar'
-                    }).then((r) => {
+                    swalConfirm(
+                        '¡Recibo Generado!',
+                        'El pago ha sido registrado correctamente.',
+                        'Ver/Imprimir Recibo'
+                    ).then((r) => {
                         if (r.isConfirmed) {
                             verDetalleRecibo(result.data.id_recibo);
                         }
@@ -310,11 +294,11 @@ async function procesarPago() {
                     document.getElementById('formRecibo').reset();
                     cargarPendientes();
                 } else {
-                    Swal.fire('Error', result.msg || 'No se pudo procesar el pago', 'error');
+                    swalError(result.msg || 'No se pudo procesar el pago');
                 }
             } catch (error) {
                 console.error('Error:', error);
-                Swal.fire('Error', 'Ocurrió un error en el servidor', 'error');
+                swalError('Ocurrió un error en el servidor');
             }
         }
     });
@@ -328,10 +312,7 @@ async function cargarHistorialRecibos() {
     if (!torneoActual) return;
 
     try {
-        const response = await fetch(`${API_URL}Recibos/listar/${torneoActual}`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-        const result = await response.json();
+        const result = await fetchAPI(`Recibos/listar/${torneoActual}`);
 
         if (tablaHistorial) tablaHistorial.destroy();
 
@@ -376,10 +357,7 @@ async function cargarHistorialRecibos() {
 
 async function verDetalleRecibo(id) {
     try {
-        const response = await fetch(`${API_URL}Recibos/detalle/${id}`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-        const result = await response.json();
+        const result = await fetchAPI(`Recibos/detalle/${id}`);
 
         if (result.status) {
             const r = result.data;
@@ -430,31 +408,29 @@ function anularRecibo(id) {
         confirmButtonText: 'Sí, anular',
         cancelButtonText: 'Cancelar',
         confirmButtonColor: '#d33',
-        inputValidator: (value) => {
-            if (!value) return '¡El motivo es obligatorio!';
-        }
-    }).then(async (result) => {
-        if (result.isConfirmed) {
-            try {
-                const response = await fetch(`${API_URL}Recibos/anular/${id}`, {
-                    method: 'PUT',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ observaciones: result.value })
-                });
-                const res = await response.json();
-                if (res.status) {
-                    Swal.fire('Anulado', 'El recibo ha sido anulado y las deudas liberadas.', 'success');
-                    cargarHistorialRecibos();
-                    if (torneoActual) cargarPendientes();
-                } else {
-                    Swal.fire('Error', res.msg, 'error');
-                }
-            } catch (error) {
-                console.error(error);
+        preConfirm: (motivo) => {
+            if (!motivo) {
+                Swal.showValidationMessage('Debe ingresar un motivo');
+                return false;
             }
+            return fetchAPI(`Recibos/anular/${id}`, {
+                method: 'PUT',
+                body: JSON.stringify({ observaciones: motivo })
+            })
+                .then(res => {
+                    if (!res.status) throw new Error(res.msg);
+                    return res;
+                })
+                .catch(error => {
+                    Swal.showValidationMessage(`Error: ${error.message}`);
+                });
+        },
+        allowOutsideClick: () => !Swal.isLoading()
+    }).then((result) => {
+        if (result.isConfirmed) {
+            swalSuccess('El recibo ha sido anulado y las deudas liberadas.', 'Anulado');
+            cargarHistorialRecibos();
+            if (torneoActual) cargarPendientes();
         }
     });
 }

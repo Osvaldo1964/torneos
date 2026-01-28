@@ -1,12 +1,12 @@
 <?php
-require_once("Config/Config.php");
-require_once("../vendor/autoload.php");
-require_once("Libraries/Core/Conexion.php");
-require_once("Libraries/Core/Mysql.php");
-require_once("Libraries/Core/Controllers.php");
-require_once("Libraries/Utils/JwtHandler.php");
-require_once("Libraries/Utils/Email.php");
-require_once("Libraries/Utils/PDFHelper.php");
+require_once(__DIR__ . "/Config/Config.php");
+require_once(__DIR__ . "/../vendor/autoload.php");
+require_once(__DIR__ . "/Libraries/Core/Conexion.php");
+require_once(__DIR__ . "/Libraries/Core/Mysql.php");
+require_once(__DIR__ . "/Libraries/Core/Controllers.php");
+require_once(__DIR__ . "/Libraries/Utils/JwtHandler.php");
+require_once(__DIR__ . "/Libraries/Utils/Email.php");
+require_once(__DIR__ . "/Libraries/Utils/PDFHelper.php");
 
 $url = !empty($_GET['url']) ? $_GET['url'] : 'Home/home';
 $arrUrl = explode("/", $url);
@@ -29,7 +29,7 @@ if (!empty($arrUrl[2])) {
     }
 }
 
-$controllerFile = "Controllers/" . $controller . ".php";
+$controllerFile = __DIR__ . "/Controllers/" . $controller . ".php";
 if (file_exists($controllerFile)) {
     require_once($controllerFile);
     $objController = new $controller();

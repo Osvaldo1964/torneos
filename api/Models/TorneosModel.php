@@ -71,4 +71,4 @@ class TorneosModel extends Mysql
         return $this->update($query, [$idTorneo, $idEquipo]);
     }
 }
-?>
+

@@ -69,4 +69,4 @@ class Permisos extends Controllers
         }
     }
 }
-?>
+

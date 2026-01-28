@@ -101,6 +101,54 @@ document.addEventListener('DOMContentLoaded', () => {
             fntLoadPartidos(idFaseSeleccionada, idGrupoSeleccionado);
         }
     };
+
+    // Formulario Programar
+    document.getElementById('formProgramar').onsubmit = async (e) => {
+        e.preventDefault();
+        try {
+            const rows = document.querySelectorAll('.terna-row');
+            const terna = [];
+            rows.forEach(row => {
+                const selA = row.querySelector('.select-arbitro');
+                const selR = row.querySelector('.select-rol');
+                if (selA && selR) {
+                    const idA = selA.value;
+                    const idR = selR.value;
+                    if (idA && idR) terna.push({ id_arbitro: idA, id_rol: idR });
+                }
+            });
+
+            const idPartido = document.getElementById('id_partido_prog').value;
+            const fechaPartido = document.getElementById('fechaProg').value;
+
+            if (!idPartido || !fechaPartido) {
+                return Swal.fire("Aviso", "Por favor complete la fecha del partido", "warning");
+            }
+
+            const data = {
+                id_partido: idPartido,
+                fecha_partido: fechaPartido,
+                terna: terna
+            };
+
+            const response = await fetch(`${api_url}Competicion/setProgramacion`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+                body: JSON.stringify(data)
+            });
+            const res = await response.json();
+            if (res.status) {
+                Swal.fire("Éxito", res.msg, "success");
+                bootstrap.Modal.getInstance(document.getElementById('modalProgramar')).hide();
+                fntLoadPartidos(idFaseSeleccionada, idGrupoSeleccionado);
+            } else {
+                Swal.fire("Error", res.msg || "Error al actualizar", "error");
+            }
+        } catch (error) {
+            console.error("Error en submit programacion:", error);
+            Swal.fire("Error", "Ocurrió un error inesperado al procesar el formulario", "error");
+        }
+    };
 });
 
 async function fntLoadTorneos() {
@@ -348,6 +396,9 @@ async function fntLoadPartidos(idFase, idGrupo) {
                         </span>
                     </td>
                     <td class="text-center">
+                        <button class="btn btn-sm btn-light border shadow-sm me-1" style="border-radius: 8px;" onclick="openModalProgramar(${JSON.stringify(p).replace(/"/g, '&quot;')})" title="Programar Fecha y Árbitro">
+                            <i class="fa-solid fa-clock text-warning"></i>
+                        </button>
                         <button class="btn btn-sm btn-light border shadow-sm" style="border-radius: 8px;" onclick="fntEditPartido(${p.id_partido})" title="Editar Resultado">
                             <i class="fa-solid fa-pen-to-square text-primary"></i>
                         </button>
@@ -475,3 +526,85 @@ async function fntGenerarFixture() {
         }
     }
 }
+async function openModalProgramar(p) {
+    document.getElementById('formProgramar').reset();
+    document.getElementById('id_partido_prog').value = p.id_partido;
+    document.getElementById('infoMatchProg').innerText = `${p.local} vs ${p.visitante}`;
+
+    if (p.fecha_partido) {
+        // Convertir YYYY-MM-DD HH:MM:SS a YYYY-MM-DDTHH:MM
+        const fecha = p.fecha_partido.replace(' ', 'T').substring(0, 16);
+        document.getElementById('fechaProg').value = fecha;
+    }
+
+    // Cargar Catálogos y Terna
+    await fntInitTerna(p);
+
+    new bootstrap.Modal(document.getElementById('modalProgramar')).show();
+}
+
+let catArbitros = [];
+let catRoles = [];
+
+async function fntInitTerna(p) {
+    const container = document.getElementById('ternaContainer');
+    container.innerHTML = '';
+
+    const idTorneo = document.getElementById('selectTorneoCal').value;
+    if (!idTorneo) return;
+
+    try {
+        const [resA, resR] = await Promise.all([
+            fetch(`${api_url}Arbitros/listar`, { headers: { "Authorization": "Bearer " + token } }).then(r => r.json()).catch(e => ({ status: false })),
+            fetch(`${api_url}Arbitros/roles/${idTorneo}`, { headers: { "Authorization": "Bearer " + token } }).then(r => r.json()).catch(e => ({ status: false }))
+        ]);
+
+        catArbitros = resA.status ? resA.data : [];
+        catRoles = resR.status ? resR.data : [];
+    } catch (e) {
+        console.error("Error cargando catálogos de arbitraje:", e);
+    }
+
+    // Si el partido ya tiene terna (en p.terna que viene del API selectPartido actualizado)
+    if (p.terna && p.terna.length > 0) {
+        p.terna.forEach(asig => agregarArbitroRow(asig));
+    } else {
+        // Por defecto una fila vacía para facilitar
+        agregarArbitroRow();
+    }
+}
+
+function agregarArbitroRow(data = null) {
+    const container = document.getElementById('ternaContainer');
+    const div = document.createElement('div');
+    div.className = "row g-2 mb-2 terna-row animate__animated animate__fadeIn";
+
+    let optA = '<option value="">-- Árbitro --</option>';
+    catArbitros.forEach(a => {
+        const sel = (data && data.id_arbitro == a.id_arbitro) ? 'selected' : '';
+        optA += `<option value="${a.id_arbitro}" ${sel}>${a.nombre_completo}</option>`;
+    });
+
+    let optR = '<option value="">-- Rol --</option>';
+    catRoles.forEach(r => {
+        const sel = (data && data.id_rol == r.id_rol) ? 'selected' : '';
+        optR += `<option value="${r.id_rol}" ${sel}>${r.nombre}</option>`;
+    });
+
+    div.innerHTML = `
+        <div class="col-6">
+            <select class="form-select select-arbitro" style="border-radius: 10px;">${optA}</select>
+        </div>
+        <div class="col-4">
+            <select class="form-select select-rol" style="border-radius: 10px;">${optR}</select>
+        </div>
+        <div class="col-2">
+            <button type="button" class="btn btn-outline-danger w-100" style="border-radius: 10px;" onclick="this.parentElement.parentElement.remove()">
+                <i class="fa-solid fa-trash"></i>
+            </button>
+        </div>
+    `;
+    container.appendChild(div);
+}
+
+

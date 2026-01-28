@@ -14,16 +14,18 @@ class FinanzasModel extends Mysql
 
         // ========== INGRESOS ==========
 
-        // Total de cuotas pagadas
+        // Total de cuotas pagadas (Basado en recibos para precisión de flujo de caja)
         $sqlCuotas = "SELECT 
-                        COUNT(*) as cantidad,
-                        SUM(monto) as total
-                      FROM cuotas_jugadores
-                      WHERE id_torneo = $idTorneo
-                      AND estado = 'PAGADO'";
+                        COUNT(DISTINCT rd.id_recibo) as cantidad,
+                        SUM(rd.monto) as total
+                      FROM recibos_detalle rd
+                      INNER JOIN recibos_ingreso r ON rd.id_recibo = r.id_recibo
+                      WHERE r.id_torneo = $idTorneo
+                      AND r.estado = 'ACTIVO'
+                      AND rd.tipo_item = 'CUOTA'";
 
         if ($fechaInicio && $fechaFin) {
-            $sqlCuotas .= " AND fecha_pago BETWEEN '$fechaInicio' AND '$fechaFin'";
+            $sqlCuotas .= " AND r.fecha_pago BETWEEN '$fechaInicio' AND '$fechaFin'";
         }
 
         $cuotas = $this->select($sqlCuotas);
@@ -34,14 +36,16 @@ class FinanzasModel extends Mysql
 
         // Total de sanciones pagadas
         $sqlSanciones = "SELECT 
-                            COUNT(*) as cantidad,
-                            SUM(monto) as total
-                         FROM sanciones_economicas
-                         WHERE id_torneo = $idTorneo
-                         AND estado = 'PAGADO'";
+                            COUNT(DISTINCT rd.id_recibo) as cantidad,
+                            SUM(rd.monto) as total
+                         FROM recibos_detalle rd
+                         INNER JOIN recibos_ingreso r ON rd.id_recibo = r.id_recibo
+                         WHERE r.id_torneo = $idTorneo
+                         AND r.estado = 'ACTIVO'
+                         AND rd.tipo_item = 'SANCION'";
 
         if ($fechaInicio && $fechaFin) {
-            $sqlSanciones .= " AND fecha_pago BETWEEN '$fechaInicio' AND '$fechaFin'";
+            $sqlSanciones .= " AND r.fecha_pago BETWEEN '$fechaInicio' AND '$fechaFin'";
         }
 
         $sanciones = $this->select($sqlSanciones);
@@ -50,14 +54,14 @@ class FinanzasModel extends Mysql
             'total' => $sanciones['total'] ?? 0
         ];
 
-        // Otros ingresos
+        // Otros ingresos (Conceptos no clasificados como cuota/sanción o directos en recibos)
         $sqlOtros = "SELECT 
                         COUNT(*) as cantidad,
-                        SUM(monto) as total
+                        SUM(total) as total
                      FROM recibos_ingreso
                      WHERE id_torneo = $idTorneo
-                     AND tipo_ingreso = 'OTRO'
-                     AND estado = 'ACTIVO'";
+                     AND estado = 'ACTIVO'
+                     AND id_recibo NOT IN (SELECT id_recibo FROM recibos_detalle WHERE tipo_item IN ('CUOTA','SANCION'))";
 
         if ($fechaInicio && $fechaFin) {
             $sqlOtros .= " AND fecha_pago BETWEEN '$fechaInicio' AND '$fechaFin'";
@@ -69,7 +73,6 @@ class FinanzasModel extends Mysql
             'total' => $otros['total'] ?? 0
         ];
 
-        // Total de ingresos
         $totalIngresos = ($cuotas['total'] ?? 0) + ($sanciones['total'] ?? 0) + ($otros['total'] ?? 0);
         $balance['ingresos']['total'] = $totalIngresos;
 
@@ -123,12 +126,10 @@ class FinanzasModel extends Mysql
             $totalGastos += $gasto['total'];
         }
 
-        // Total de egresos
         $totalEgresos = ($arbitros['total'] ?? 0) + $totalGastos;
         $balance['egresos']['total'] = $totalEgresos;
 
         // ========== TOTALES ==========
-
         $balance['totales']['ingresos'] = $totalIngresos;
         $balance['totales']['egresos'] = $totalEgresos;
         $balance['totales']['resultado'] = $totalIngresos - $totalEgresos;
@@ -137,19 +138,14 @@ class FinanzasModel extends Mysql
         return $balance;
     }
 
-    /**
-     * Obtiene reporte de recaudos (ingresos)
-     */
     public function getReporteRecaudos($idTorneo, $fechaInicio = null, $fechaFin = null)
     {
         $reporte = [];
 
-        // Recibos de ingreso
         $sqlRecibos = "SELECT 
-                        tipo_ingreso,
                         forma_pago,
                         COUNT(*) as cantidad,
-                        SUM(monto) as total
+                        SUM(total) as total
                        FROM recibos_ingreso
                        WHERE id_torneo = $idTorneo
                        AND estado = 'ACTIVO'";
@@ -158,14 +154,12 @@ class FinanzasModel extends Mysql
             $sqlRecibos .= " AND fecha_pago BETWEEN '$fechaInicio' AND '$fechaFin'";
         }
 
-        $sqlRecibos .= " GROUP BY tipo_ingreso, forma_pago";
-
+        $sqlRecibos .= " GROUP BY forma_pago";
         $reporte['detalle'] = $this->select_all($sqlRecibos);
 
-        // Total general
         $sqlTotal = "SELECT 
                         COUNT(*) as total_recibos,
-                        SUM(monto) as total_monto
+                        SUM(total) as total_monto
                      FROM recibos_ingreso
                      WHERE id_torneo = $idTorneo
                      AND estado = 'ACTIVO'";
@@ -175,18 +169,13 @@ class FinanzasModel extends Mysql
         }
 
         $reporte['total'] = $this->select($sqlTotal);
-
         return $reporte;
     }
 
-    /**
-     * Obtiene reporte de gastos (egresos)
-     */
     public function getReporteGastos($idTorneo, $fechaInicio = null, $fechaFin = null)
     {
         $reporte = [];
 
-        // Gastos generales
         $sqlGastos = "SELECT 
                         tipo_gasto,
                         forma_pago,
@@ -201,10 +190,8 @@ class FinanzasModel extends Mysql
         }
 
         $sqlGastos .= " GROUP BY tipo_gasto, forma_pago";
-
         $reporte['gastos'] = $this->select_all($sqlGastos);
 
-        // Pagos a árbitros
         $sqlArbitros = "SELECT 
                             COUNT(*) as cantidad,
                             SUM(pa.monto) as total
@@ -221,7 +208,6 @@ class FinanzasModel extends Mysql
 
         $reporte['arbitros'] = $this->select($sqlArbitros);
 
-        // Total general
         $totalGastos = 0;
         foreach ($reporte['gastos'] as $gasto) {
             $totalGastos += $gasto['total'];
@@ -229,30 +215,32 @@ class FinanzasModel extends Mysql
         $totalArbitros = $reporte['arbitros']['total'] ?? 0;
 
         $reporte['total'] = [
-            'total_gastos' => count($reporte['gastos']),
+            'total_items' => count($reporte['gastos']) + ($reporte['arbitros']['cantidad'] > 0 ? 1 : 0),
             'total_monto' => $totalGastos + $totalArbitros
         ];
 
         return $reporte;
     }
 
-    /**
-     * Obtiene comparación entre múltiples torneos
-     */
     public function getComparacionTorneos($idLiga, $torneos = [])
     {
         $comparacion = [];
+        if (empty($torneos))
+            return [];
+
+        $strTorneos = implode(',', $torneos);
+        $sqlNames = "SELECT id_torneo, nombre FROM torneos WHERE id_torneo IN ($strTorneos)";
+        $names = $this->select_all($sqlNames);
+
+        $nameMap = [];
+        foreach ($names as $n)
+            $nameMap[$n['id_torneo']] = $n['nombre'];
 
         foreach ($torneos as $idTorneo) {
             $balance = $this->getBalance($idTorneo);
-
-            // Obtener nombre del torneo
-            $sqlTorneo = "SELECT nombre FROM torneos WHERE id_torneo = $idTorneo";
-            $torneo = $this->select($sqlTorneo);
-
             $comparacion[] = [
                 'id_torneo' => $idTorneo,
-                'nombre' => $torneo['nombre'] ?? 'Torneo ' . $idTorneo,
+                'nombre' => $nameMap[$idTorneo] ?? 'Torneo ' . $idTorneo,
                 'ingresos' => $balance['totales']['ingresos'],
                 'egresos' => $balance['totales']['egresos'],
                 'resultado' => $balance['totales']['resultado'],
@@ -263,12 +251,10 @@ class FinanzasModel extends Mysql
         return $comparacion;
     }
 
-    /**
-     * Obtiene evolución mensual de ingresos/egresos
-     */
     public function getEvolucionMensual($idTorneo, $anio)
     {
         $evolucion = [];
+        $meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
 
         for ($mes = 1; $mes <= 12; $mes++) {
             $fechaInicio = "$anio-" . str_pad($mes, 2, '0', STR_PAD_LEFT) . "-01";
@@ -279,7 +265,7 @@ class FinanzasModel extends Mysql
 
             $evolucion[] = [
                 'mes' => $mes,
-                'mes_nombre' => date('F', mktime(0, 0, 0, $mes, 1)),
+                'mes_nombre' => $meses[$mes - 1],
                 'ingresos' => $balance['totales']['ingresos'],
                 'egresos' => $balance['totales']['egresos'],
                 'resultado' => $balance['totales']['resultado']
@@ -289,9 +275,6 @@ class FinanzasModel extends Mysql
         return $evolucion;
     }
 
-    /**
-     * Obtiene estadísticas generales del módulo financiero
-     */
     public function getEstadisticas($idTorneo)
     {
         $stats = [];
@@ -336,3 +319,4 @@ class FinanzasModel extends Mysql
         return $stats;
     }
 }
+

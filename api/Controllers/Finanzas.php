@@ -1,11 +1,19 @@
 <?php
-require_once("Models/FinanzasModel.php");
-
 class Finanzas extends Controllers
 {
+    public $userData;
+
     public function __construct()
     {
         parent::__construct();
+        $headers = getallheaders();
+        $token = isset($headers['Authorization']) ? str_replace('Bearer ', '', $headers['Authorization']) : "";
+        $jwt = new JwtHandler();
+        $this->userData = $jwt->validateToken($token);
+        if (!$this->userData) {
+            $this->res(false, "Token inválido");
+            exit;
+        }
     }
 
     /**
@@ -14,37 +22,16 @@ class Finanzas extends Controllers
      */
     public function balance($params)
     {
-        $headers = getallheaders();
-        $token = isset($headers['Authorization']) ? str_replace('Bearer ', '', $headers['Authorization']) : '';
-
-        if (empty($token)) {
-            $this->sendResponse(['status' => false, 'msg' => 'Token no proporcionado'], 401);
-            return;
-        }
-
-        $jwt = new JwtHandler();
-        $jwtData = $jwt->validateToken($token);
-        if (!$jwtData) {
-            $this->sendResponse(['status' => false, 'msg' => 'Token inválido o expirado'], 401);
-            return;
-        }
-
         $idTorneo = intval($params);
         if ($idTorneo <= 0) {
-            $this->sendResponse(['status' => false, 'msg' => 'ID de torneo inválido'], 400);
-            return;
+            return $this->res(false, "ID de torneo inválido");
         }
 
         $fechaInicio = $_GET['fechaInicio'] ?? null;
         $fechaFin = $_GET['fechaFin'] ?? null;
 
-        $model = new FinanzasModel();
-        $balance = $model->getBalance($idTorneo, $fechaInicio, $fechaFin);
-
-        $this->sendResponse([
-            'status' => true,
-            'data' => $balance
-        ]);
+        $data = $this->model->getBalance($idTorneo, $fechaInicio, $fechaFin);
+        return $this->res(true, "Balance obtenido", $data);
     }
 
     /**
@@ -53,37 +40,16 @@ class Finanzas extends Controllers
      */
     public function recaudos($params)
     {
-        $headers = getallheaders();
-        $token = isset($headers['Authorization']) ? str_replace('Bearer ', '', $headers['Authorization']) : '';
-
-        if (empty($token)) {
-            $this->sendResponse(['status' => false, 'msg' => 'Token no proporcionado'], 401);
-            return;
-        }
-
-        $jwt = new JwtHandler();
-        $jwtData = $jwt->validateToken($token);
-        if (!$jwtData) {
-            $this->sendResponse(['status' => false, 'msg' => 'Token inválido o expirado'], 401);
-            return;
-        }
-
         $idTorneo = intval($params);
         if ($idTorneo <= 0) {
-            $this->sendResponse(['status' => false, 'msg' => 'ID de torneo inválido'], 400);
-            return;
+            return $this->res(false, "ID de torneo inválido");
         }
 
         $fechaInicio = $_GET['fechaInicio'] ?? null;
         $fechaFin = $_GET['fechaFin'] ?? null;
 
-        $model = new FinanzasModel();
-        $reporte = $model->getReporteRecaudos($idTorneo, $fechaInicio, $fechaFin);
-
-        $this->sendResponse([
-            'status' => true,
-            'data' => $reporte
-        ]);
+        $data = $this->model->getReporteRecaudos($idTorneo, $fechaInicio, $fechaFin);
+        return $this->res(true, "Reporte de recaudos obtenido", $data);
     }
 
     /**
@@ -92,37 +58,16 @@ class Finanzas extends Controllers
      */
     public function gastos($params)
     {
-        $headers = getallheaders();
-        $token = isset($headers['Authorization']) ? str_replace('Bearer ', '', $headers['Authorization']) : '';
-
-        if (empty($token)) {
-            $this->sendResponse(['status' => false, 'msg' => 'Token no proporcionado'], 401);
-            return;
-        }
-
-        $jwt = new JwtHandler();
-        $jwtData = $jwt->validateToken($token);
-        if (!$jwtData) {
-            $this->sendResponse(['status' => false, 'msg' => 'Token inválido o expirado'], 401);
-            return;
-        }
-
         $idTorneo = intval($params);
         if ($idTorneo <= 0) {
-            $this->sendResponse(['status' => false, 'msg' => 'ID de torneo inválido'], 400);
-            return;
+            return $this->res(false, "ID de torneo inválido");
         }
 
         $fechaInicio = $_GET['fechaInicio'] ?? null;
         $fechaFin = $_GET['fechaFin'] ?? null;
 
-        $model = new FinanzasModel();
-        $reporte = $model->getReporteGastos($idTorneo, $fechaInicio, $fechaFin);
-
-        $this->sendResponse([
-            'status' => true,
-            'data' => $reporte
-        ]);
+        $data = $this->model->getReporteGastos($idTorneo, $fechaInicio, $fechaFin);
+        return $this->res(true, "Reporte de gastos obtenido", $data);
     }
 
     /**
@@ -131,37 +76,14 @@ class Finanzas extends Controllers
      */
     public function comparacion($params)
     {
-        $headers = getallheaders();
-        $token = isset($headers['Authorization']) ? str_replace('Bearer ', '', $headers['Authorization']) : '';
-
-        if (empty($token)) {
-            $this->sendResponse(['status' => false, 'msg' => 'Token no proporcionado'], 401);
-            return;
-        }
-
-        $jwt = new JwtHandler();
-        $jwtData = $jwt->validateToken($token);
-        if (!$jwtData) {
-            $this->sendResponse(['status' => false, 'msg' => 'Token inválido o expirado'], 401);
-            return;
-        }
-
-        $idLiga = $jwtData['id_liga'];
-
         if (!isset($_GET['torneos'])) {
-            $this->sendResponse(['status' => false, 'msg' => 'Parámetro torneos requerido'], 400);
-            return;
+            return $this->res(false, "Parámetro torneos requerido");
         }
 
         $torneos = array_map('intval', explode(',', $_GET['torneos']));
+        $data = $this->model->getComparacionTorneos($this->userData['id_liga'], $torneos);
 
-        $model = new FinanzasModel();
-        $comparacion = $model->getComparacionTorneos($idLiga, $torneos);
-
-        $this->sendResponse([
-            'status' => true,
-            'data' => $comparacion
-        ]);
+        return $this->res(true, "Comparación de torneos obtenida", $data);
     }
 
     /**
@@ -170,37 +92,16 @@ class Finanzas extends Controllers
      */
     public function evolucion($params)
     {
-        $headers = getallheaders();
-        $token = isset($headers['Authorization']) ? str_replace('Bearer ', '', $headers['Authorization']) : '';
-
-        if (empty($token)) {
-            $this->sendResponse(['status' => false, 'msg' => 'Token no proporcionado'], 401);
-            return;
-        }
-
-        $jwt = new JwtHandler();
-        $jwtData = $jwt->validateToken($token);
-        if (!$jwtData) {
-            $this->sendResponse(['status' => false, 'msg' => 'Token inválido o expirado'], 401);
-            return;
-        }
-
         $arrParams = explode(',', $params);
         $idTorneo = intval($arrParams[0] ?? 0);
         $anio = intval($arrParams[1] ?? date('Y'));
 
         if ($idTorneo <= 0) {
-            $this->sendResponse(['status' => false, 'msg' => 'ID de torneo inválido'], 400);
-            return;
+            return $this->res(false, "ID de torneo inválido");
         }
 
-        $model = new FinanzasModel();
-        $evolucion = $model->getEvolucionMensual($idTorneo, $anio);
-
-        $this->sendResponse([
-            'status' => true,
-            'data' => $evolucion
-        ]);
+        $data = $this->model->getEvolucionMensual($idTorneo, $anio);
+        return $this->res(true, "Evolución mensual obtenida", $data);
     }
 
     /**
@@ -209,107 +110,52 @@ class Finanzas extends Controllers
      */
     public function estadisticas($params)
     {
-        $headers = getallheaders();
-        $token = isset($headers['Authorization']) ? str_replace('Bearer ', '', $headers['Authorization']) : '';
-
-        if (empty($token)) {
-            $this->sendResponse(['status' => false, 'msg' => 'Token no proporcionado'], 401);
-            return;
-        }
-
-        $jwt = new JwtHandler();
-        $jwtData = $jwt->validateToken($token);
-        if (!$jwtData) {
-            $this->sendResponse(['status' => false, 'msg' => 'Token inválido o expirado'], 401);
-            return;
-        }
-
         $idTorneo = intval($params);
         if ($idTorneo <= 0) {
-            $this->sendResponse(['status' => false, 'msg' => 'ID de torneo inválido'], 400);
-            return;
+            return $this->res(false, "ID de torneo inválido");
         }
 
-        $model = new FinanzasModel();
-        $estadisticas = $model->getEstadisticas($idTorneo);
-
-        $this->sendResponse([
-            'status' => true,
-            'data' => $estadisticas
-        ]);
+        $data = $this->model->getEstadisticas($idTorneo);
+        return $this->res(true, "Estadísticas obtenidas", $data);
     }
 
     /**
      * GET: Exporta datos a PDF o Excel
      * Endpoint: Finanzas/exportar/{tipo}/{idTorneo}
-     * Tipo: balance, recaudos, gastos
      */
     public function exportar($params)
     {
-        $headers = getallheaders();
-        $token = isset($headers['Authorization']) ? str_replace('Bearer ', '', $headers['Authorization']) : '';
-
-        if (empty($token)) {
-            $this->sendResponse(['status' => false, 'msg' => 'Token no proporcionado'], 401);
-            return;
-        }
-
-        $jwt = new JwtHandler();
-        $jwtData = $jwt->validateToken($token);
-        if (!$jwtData) {
-            $this->sendResponse(['status' => false, 'msg' => 'Token inválido o expirado'], 401);
-            return;
-        }
-
         $arrParams = explode(',', $params);
         $tipo = $arrParams[0] ?? '';
         $idTorneo = intval($arrParams[1] ?? 0);
 
         if ($idTorneo <= 0 || empty($tipo)) {
-            $this->sendResponse(['status' => false, 'msg' => 'Parámetros inválidos'], 400);
-            return;
+            return $this->res(false, "Parámetros inválidos");
         }
 
         $fechaInicio = $_GET['fechaInicio'] ?? null;
         $fechaFin = $_GET['fechaFin'] ?? null;
-        $formato = $_GET['formato'] ?? 'pdf'; // pdf o excel
+        $formato = $_GET['formato'] ?? 'pdf';
 
-        $model = new FinanzasModel();
-
-        // Obtener datos según el tipo
         switch ($tipo) {
             case 'balance':
-                $datos = $model->getBalance($idTorneo, $fechaInicio, $fechaFin);
+                $datos = $this->model->getBalance($idTorneo, $fechaInicio, $fechaFin);
                 break;
             case 'recaudos':
-                $datos = $model->getReporteRecaudos($idTorneo, $fechaInicio, $fechaFin);
+                $datos = $this->model->getReporteRecaudos($idTorneo, $fechaInicio, $fechaFin);
                 break;
             case 'gastos':
-                $datos = $model->getReporteGastos($idTorneo, $fechaInicio, $fechaFin);
+                $datos = $this->model->getReporteGastos($idTorneo, $fechaInicio, $fechaFin);
                 break;
             default:
-                $this->sendResponse(['status' => false, 'msg' => 'Tipo de reporte inválido'], 400);
-                return;
+                return $this->res(false, "Tipo de reporte inválido");
         }
 
-        // TODO: Implementar generación de PDF/Excel
-        // Por ahora retornamos los datos en JSON
-        $this->sendResponse([
-            'status' => true,
-            'msg' => 'Exportación pendiente de implementar',
-            'data' => $datos,
-            'formato' => $formato
+        return $this->res(true, "Datos para exportación obtenidos", [
+            "datos" => $datos,
+            "tipo" => $tipo,
+            "formato" => $formato
         ]);
     }
-
-    /**
-     * Envía respuesta JSON
-     */
-    private function sendResponse($data, $statusCode = 200)
-    {
-        http_response_code($statusCode);
-        header('Content-Type: application/json');
-        echo json_encode($data);
-        exit;
-    }
 }
+

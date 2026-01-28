@@ -1,87 +1,51 @@
 <?php
-require_once("Models/ArbitrosModel.php");
-
 class Arbitros extends Controllers
 {
+    public $userData;
+
     public function __construct()
     {
         parent::__construct();
+        $headers = getallheaders();
+        $token = isset($headers['Authorization']) ? str_replace('Bearer ', '', $headers['Authorization']) : "";
+        $jwt = new JwtHandler();
+        $this->userData = $jwt->validateToken($token);
+        if (!$this->userData) {
+            $this->res(false, "Token inválido");
+        }
     }
 
     /**
      * GET: Lista todos los árbitros
      * Endpoint: Arbitros/listar
      */
-    public function listar($params)
+    public function listar()
     {
-        $headers = getallheaders();
-        $token = isset($headers['Authorization']) ? str_replace('Bearer ', '', $headers['Authorization']) : '';
-
-        if (empty($token)) {
-            $this->sendResponse(['status' => false, 'msg' => 'Token no proporcionado'], 401);
-            return;
-        }
-
-        $jwt = new JwtHandler();
-        $jwtData = $jwt->validateToken($token);
-        if (!$jwtData) {
-            $this->sendResponse(['status' => false, 'msg' => 'Token inválido o expirado'], 401);
-            return;
-        }
-
         $estado = $_GET['estado'] ?? 1;
-
-        $model = new ArbitrosModel();
-        $arbitros = $model->listarArbitros($estado);
-
-        $this->sendResponse([
-            'status' => true,
-            'data' => $arbitros
-        ]);
+        $data = $this->model->listarArbitros($estado);
+        $this->res(true, "Listado de árbitros", $data);
     }
 
     /**
      * POST: Crea un árbitro
      * Endpoint: Arbitros/crear
      */
-    public function crear($params)
+    public function crear()
     {
-        $headers = getallheaders();
-        $token = isset($headers['Authorization']) ? str_replace('Bearer ', '', $headers['Authorization']) : '';
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $data = json_decode(file_get_contents('php://input'), true);
 
-        if (empty($token)) {
-            $this->sendResponse(['status' => false, 'msg' => 'Token no proporcionado'], 401);
-            return;
-        }
+            if (empty($data['nombre_completo'])) {
+                $this->res(false, "El nombre completo es obligatorio");
+            }
 
-        $jwt = new JwtHandler();
-        $jwtData = $jwt->validateToken($token);
-        if (!$jwtData) {
-            $this->sendResponse(['status' => false, 'msg' => 'Token inválido o expirado'], 401);
-            return;
-        }
+            $request = $this->model->crearArbitro($data);
 
-        $data = json_decode(file_get_contents('php://input'), true);
-
-        if (!isset($data['nombre_completo'])) {
-            $this->sendResponse(['status' => false, 'msg' => 'Nombre completo es requerido'], 400);
-            return;
-        }
-
-        $model = new ArbitrosModel();
-        $idArbitro = $model->crearArbitro($data);
-
-        if ($idArbitro) {
-            $this->sendResponse([
-                'status' => true,
-                'msg' => 'Árbitro creado exitosamente',
-                'id_arbitro' => $idArbitro
-            ]);
-        } else {
-            $this->sendResponse([
-                'status' => false,
-                'msg' => 'Error al crear el árbitro'
-            ], 500);
+            if ($request > 0) {
+                $this->res(true, "Árbitro creado exitosamente", ["id_arbitro" => $request]);
+            } else {
+                $this->res(false, "Error al crear el árbitro");
+            }
         }
     }
 
@@ -89,224 +53,125 @@ class Arbitros extends Controllers
      * PUT: Actualiza un árbitro
      * Endpoint: Arbitros/actualizar/{idArbitro}
      */
-    public function actualizar($params)
+    public function actualizar($idArbitro)
     {
-        $headers = getallheaders();
-        $token = isset($headers['Authorization']) ? str_replace('Bearer ', '', $headers['Authorization']) : '';
+        if ($_SERVER['REQUEST_METHOD'] == 'PUT' || $_SERVER['REQUEST_METHOD'] == 'POST') {
+            $idArbitro = intval($idArbitro);
+            if ($idArbitro <= 0) {
+                $this->res(false, "ID de árbitro inválido");
+            }
 
-        if (empty($token)) {
-            $this->sendResponse(['status' => false, 'msg' => 'Token no proporcionado'], 401);
-            return;
-        }
+            $data = json_decode(file_get_contents('php://input'), true);
+            if (empty($data['nombre_completo'])) {
+                $this->res(false, "El nombre completo es obligatorio");
+            }
 
-        $jwt = new JwtHandler();
-        $jwtData = $jwt->validateToken($token);
-        if (!$jwtData) {
-            $this->sendResponse(['status' => false, 'msg' => 'Token inválido o expirado'], 401);
-            return;
-        }
+            $request = $this->model->actualizarArbitro($idArbitro, $data);
 
-        $idArbitro = intval($params);
-        if ($idArbitro <= 0) {
-            $this->sendResponse(['status' => false, 'msg' => 'ID de árbitro inválido'], 400);
-            return;
-        }
-
-        $data = json_decode(file_get_contents('php://input'), true);
-
-        $model = new ArbitrosModel();
-        $result = $model->actualizarArbitro($idArbitro, $data);
-
-        if ($result) {
-            $this->sendResponse([
-                'status' => true,
-                'msg' => 'Árbitro actualizado exitosamente'
-            ]);
-        } else {
-            $this->sendResponse([
-                'status' => false,
-                'msg' => 'Error al actualizar el árbitro'
-            ], 500);
+            if ($request) {
+                $this->res(true, "Árbitro actualizado exitosamente");
+            } else {
+                $this->res(false, "Error al actualizar el árbitro");
+            }
         }
     }
 
     /**
-     * GET: Obtiene la configuración de pagos a árbitros
-     * Endpoint: Arbitros/configuracion/{idTorneo}
+     * GET: Obtiene los roles y tarifas de un torneo
+     * Endpoint: Arbitros/roles/{idTorneo}
      */
-    public function configuracion($params)
+    public function roles($idTorneo)
     {
-        $headers = getallheaders();
-        $token = isset($headers['Authorization']) ? str_replace('Bearer ', '', $headers['Authorization']) : '';
-
-        if (empty($token)) {
-            $this->sendResponse(['status' => false, 'msg' => 'Token no proporcionado'], 401);
-            return;
+        $idTorneo = intval($idTorneo);
+        if ($idTorneo > 0) {
+            $data = $this->model->getRoles($idTorneo);
+            $this->res(true, "Roles obtenidos", $data);
         }
-
-        $jwt = new JwtHandler();
-        $jwtData = $jwt->validateToken($token);
-        if (!$jwtData) {
-            $this->sendResponse(['status' => false, 'msg' => 'Token inválido o expirado'], 401);
-            return;
-        }
-
-        $idTorneo = intval($params);
-        if ($idTorneo <= 0) {
-            $this->sendResponse(['status' => false, 'msg' => 'ID de torneo inválido'], 400);
-            return;
-        }
-
-        $model = new ArbitrosModel();
-        $config = $model->getConfiguracion($idTorneo);
-
-        $this->sendResponse([
-            'status' => true,
-            'data' => $config
-        ]);
+        $this->res(false, "ID Torneo inválido");
     }
 
     /**
-     * POST: Guarda la configuración de pagos a árbitros
-     * Endpoint: Arbitros/guardarConfiguracion
+     * POST: Guarda un rol de arbitraje
+     * Endpoint: Arbitros/guardarRol
      */
-    public function guardarConfiguracion($params)
+    public function guardarRol()
     {
-        $headers = getallheaders();
-        $token = isset($headers['Authorization']) ? str_replace('Bearer ', '', $headers['Authorization']) : '';
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $data = json_decode(file_get_contents("php://input"), true);
+            $idTorneo = intval($data['id_torneo'] ?? 0);
+            $idRol = intval($data['id_rol'] ?? 0);
+            $nombre = $data['nombre'] ?? '';
+            $monto = floatval($data['monto'] ?? 0);
 
-        if (empty($token)) {
-            $this->sendResponse(['status' => false, 'msg' => 'Token no proporcionado'], 401);
-            return;
+            if ($idTorneo > 0 && !empty($nombre)) {
+                $request = $this->model->guardarRol($idTorneo, $nombre, $monto, $idRol);
+                if ($request) {
+                    $this->res(true, "Rol guardado correctamente");
+                }
+            }
+            $this->res(false, "Datos incompletos");
         }
+    }
 
-        $jwt = new JwtHandler();
-        $jwtData = $jwt->validateToken($token);
-        if (!$jwtData) {
-            $this->sendResponse(['status' => false, 'msg' => 'Token inválido o expirado'], 401);
-            return;
+    /**
+     * DELETE: Elimina un rol
+     * Endpoint: Arbitros/eliminarRol/{idRol}
+     */
+    public function eliminarRol($idRol)
+    {
+        $idRol = intval($idRol);
+        if ($idRol > 0) {
+            $request = $this->model->eliminarRol($idRol);
+            if ($request) {
+                $this->res(true, "Rol eliminado");
+            }
         }
-
-        $data = json_decode(file_get_contents('php://input'), true);
-
-        if (!isset($data['id_torneo']) || !isset($data['monto_por_partido'])) {
-            $this->sendResponse(['status' => false, 'msg' => 'Datos incompletos'], 400);
-            return;
-        }
-
-        $model = new ArbitrosModel();
-        $result = $model->guardarConfiguracion($data['id_torneo'], $data['monto_por_partido']);
-
-        if ($result) {
-            $this->sendResponse([
-                'status' => true,
-                'msg' => 'Configuración guardada exitosamente'
-            ]);
-        } else {
-            $this->sendResponse([
-                'status' => false,
-                'msg' => 'Error al guardar la configuración'
-            ], 500);
-        }
+        $this->res(false, "No se pudo eliminar el rol");
     }
 
     /**
      * GET: Lista pagos a árbitros
      * Endpoint: Arbitros/pagos/{idTorneo}
      */
-    public function pagos($params)
+    public function pagos($idTorneo)
     {
-        $headers = getallheaders();
-        $token = isset($headers['Authorization']) ? str_replace('Bearer ', '', $headers['Authorization']) : '';
-
-        if (empty($token)) {
-            $this->sendResponse(['status' => false, 'msg' => 'Token no proporcionado'], 401);
-            return;
-        }
-
-        $jwt = new JwtHandler();
-        $jwtData = $jwt->validateToken($token);
-        if (!$jwtData) {
-            $this->sendResponse(['status' => false, 'msg' => 'Token inválido o expirado'], 401);
-            return;
-        }
-
-        $idTorneo = intval($params);
+        $idTorneo = intval($idTorneo);
         if ($idTorneo <= 0) {
-            $this->sendResponse(['status' => false, 'msg' => 'ID de torneo inválido'], 400);
-            return;
+            $this->res(false, "ID de torneo inválido");
         }
 
         $estado = $_GET['estado'] ?? null;
         $idArbitro = isset($_GET['idArbitro']) ? intval($_GET['idArbitro']) : null;
 
-        $model = new ArbitrosModel();
-        $pagos = $model->listarPagos($idTorneo, $estado, $idArbitro);
-
-        $this->sendResponse([
-            'status' => true,
-            'data' => $pagos
-        ]);
+        $pagos = $this->model->listarPagos($idTorneo, $estado, $idArbitro);
+        $this->res(true, "Listado de pagos a árbitros", $pagos);
     }
 
     /**
      * POST: Registra un pago a árbitro
      * Endpoint: Arbitros/registrarPago/{idPago}
      */
-    public function registrarPago($params)
+    public function registrarPago($idPago)
     {
-        $headers = getallheaders();
-        $token = isset($headers['Authorization']) ? str_replace('Bearer ', '', $headers['Authorization']) : '';
+        if ($_SERVER['REQUEST_METHOD'] == 'POST' || $_SERVER['REQUEST_METHOD'] == 'PUT') {
+            $idPago = intval($idPago);
+            if ($idPago <= 0) {
+                $this->res(false, "ID de pago inválido");
+            }
 
-        if (empty($token)) {
-            $this->sendResponse(['status' => false, 'msg' => 'Token no proporcionado'], 401);
-            return;
+            $data = json_decode(file_get_contents('php://input'), true);
+
+            if (empty($data['fecha_pago']) || empty($data['forma_pago'])) {
+                $this->res(false, "Datos del pago incompletos");
+            }
+
+            $request = $this->model->registrarPago($idPago, $data);
+
+            if ($request) {
+                $this->res(true, "Pago registrado correctamente");
+            } else {
+                $this->res(false, "Error al registrar el pago");
+            }
         }
-
-        $jwt = new JwtHandler();
-        $jwtData = $jwt->validateToken($token);
-        if (!$jwtData) {
-            $this->sendResponse(['status' => false, 'msg' => 'Token inválido o expirado'], 401);
-            return;
-        }
-
-        $idPago = intval($params);
-        if ($idPago <= 0) {
-            $this->sendResponse(['status' => false, 'msg' => 'ID de pago inválido'], 400);
-            return;
-        }
-
-        $data = json_decode(file_get_contents('php://input'), true);
-
-        if (!isset($data['fecha_pago']) || !isset($data['forma_pago'])) {
-            $this->sendResponse(['status' => false, 'msg' => 'Datos incompletos'], 400);
-            return;
-        }
-
-        $model = new ArbitrosModel();
-        $result = $model->registrarPago($idPago, $data);
-
-        if ($result) {
-            $this->sendResponse([
-                'status' => true,
-                'msg' => 'Pago registrado exitosamente'
-            ]);
-        } else {
-            $this->sendResponse([
-                'status' => false,
-                'msg' => 'Error al registrar el pago'
-            ], 500);
-        }
-    }
-
-    /**
-     * Envía respuesta JSON
-     */
-    private function sendResponse($data, $statusCode = 200)
-    {
-        http_response_code($statusCode);
-        header('Content-Type: application/json');
-        echo json_encode($data);
-        exit;
     }
 }

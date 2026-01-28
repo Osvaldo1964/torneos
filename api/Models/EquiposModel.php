@@ -49,4 +49,4 @@ class EquiposModel extends Mysql
         return $this->select_all($sql);
     }
 }
-?>
+

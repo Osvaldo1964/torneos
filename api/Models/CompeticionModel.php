@@ -170,12 +170,24 @@ class CompeticionModel extends Mysql
 
     public function selectPartido(int $idPartido)
     {
-        $sql = "SELECT p.*, el.nombre as local, ev.nombre as visitante, el.escudo as logo_local, ev.escudo as logo_visitante 
+        $sql = "SELECT p.*, el.nombre as local, ev.nombre as visitante, el.escudo as logo_local, ev.escudo as logo_visitante
                 FROM partidos p
                 LEFT JOIN equipos el ON p.id_local = el.id_equipo
                 LEFT JOIN equipos ev ON p.id_visitante = ev.id_equipo
                 WHERE p.id_partido = $idPartido";
-        return $this->select($sql);
+        $data = $this->select($sql);
+
+        if ($data) {
+            // Obtener asignación de árbitros
+            $sqlRef = "SELECT pa.id_arbitro, pa.id_rol, a.nombre_completo as arbitro_nombre, r.nombre as rol_nombre
+                       FROM partidos_arbitros pa
+                       INNER JOIN arbitros a ON pa.id_arbitro = a.id_arbitro
+                       INNER JOIN arbitro_roles r ON pa.id_rol = r.id_rol
+                       WHERE pa.id_partido = $idPartido";
+            $data['terna'] = $this->select_all($sqlRef);
+        }
+
+        return $data;
     }
 
     public function updateResultado(int $idPartido, int $golesLocal, int $golesVisitante, string $estado)
@@ -183,5 +195,33 @@ class CompeticionModel extends Mysql
         $sql = "UPDATE partidos SET goles_local = ?, goles_visitante = ?, estado = ? WHERE id_partido = ?";
         return $this->update($sql, [$golesLocal, $golesVisitante, $estado, $idPartido]);
     }
+
+    public function updateProgramacion(int $idPartido, string $fecha, array $terna)
+    {
+        try {
+            // 1. Actualizar fecha en tabla partidos
+            $sql = "UPDATE partidos SET fecha_partido = ? WHERE id_partido = ?";
+            $this->update($sql, [$fecha, $idPartido]);
+
+            // 2. Limpiar terna anterior (Usando parámetros para seguridad)
+            $this->delete("DELETE FROM partidos_arbitros WHERE id_partido = $idPartido");
+
+            // 3. Insertar nueva terna
+            foreach ($terna as $t) {
+                // Asegurarse de que los IDs sean números válidos
+                $idArbitro = intval($t['id_arbitro'] ?? 0);
+                $idRol = intval($t['id_rol'] ?? 0);
+
+                if ($idArbitro > 0 && $idRol > 0) {
+                    $sqlIns = "INSERT INTO partidos_arbitros (id_partido, id_arbitro, id_rol) VALUES (?, ?, ?)";
+                    $this->insert($sqlIns, [$idPartido, $idArbitro, $idRol]);
+                }
+            }
+            return true;
+        } catch (Exception $e) {
+            error_log("Error en updateProgramacion: " . $e->getMessage());
+            return false;
+        }
+    }
 }
-?>
+

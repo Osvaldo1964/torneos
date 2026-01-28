@@ -1,292 +1,82 @@
 <?php
-require_once("Models/PagosModel.php");
-
 class Pagos extends Controllers
 {
+    public $userData;
+
     public function __construct()
     {
         parent::__construct();
+        $headers = getallheaders();
+        $token = isset($headers['Authorization']) ? str_replace('Bearer ', '', $headers['Authorization']) : "";
+        $jwt = new JwtHandler();
+        $this->userData = $jwt->validateToken($token);
+        if (!$this->userData) {
+            $this->res(false, "Token inválido");
+            exit;
+        }
     }
 
-    /**
-     * GET: Lista los gastos de un torneo
-     * Endpoint: Pagos/listar/{idTorneo}
-     */
-    public function listar($params)
+    public function listar($idTorneo)
     {
-        $headers = getallheaders();
-        $token = isset($headers['Authorization']) ? str_replace('Bearer ', '', $headers['Authorization']) : '';
-
-        if (empty($token)) {
-            $this->sendResponse(['status' => false, 'msg' => 'Token no proporcionado'], 401);
-            return;
+        if (empty($idTorneo)) {
+            return $this->res(false, "ID de torneo no válido");
         }
-
-        $jwt = new JwtHandler();
-        $jwtData = $jwt->validateToken($token);
-        if (!$jwtData) {
-            $this->sendResponse(['status' => false, 'msg' => 'Token inválido o expirado'], 401);
-            return;
+        try {
+            $data = $this->model->listarGastos($idTorneo);
+            return $this->res(true, "Listado de gastos", $data);
+        } catch (Exception $e) {
+            return $this->res(false, "Error de base de datos: " . $e->getMessage());
         }
-
-        $idTorneo = intval($params);
-        if ($idTorneo <= 0) {
-            $this->sendResponse(['status' => false, 'msg' => 'ID de torneo inválido'], 400);
-            return;
-        }
-
-        $estado = $_GET['estado'] ?? null;
-        $tipoGasto = $_GET['tipo'] ?? null;
-        $fechaInicio = $_GET['fechaInicio'] ?? null;
-        $fechaFin = $_GET['fechaFin'] ?? null;
-
-        $model = new PagosModel();
-        $gastos = $model->listarGastos($idTorneo, $estado, $tipoGasto, $fechaInicio, $fechaFin);
-
-        $this->sendResponse([
-            'status' => true,
-            'data' => $gastos
-        ]);
     }
 
-    /**
-     * GET: Obtiene un gasto específico
-     * Endpoint: Pagos/detalle/{idPago}
-     */
-    public function detalle($params)
+    public function crear()
     {
-        $headers = getallheaders();
-        $token = isset($headers['Authorization']) ? str_replace('Bearer ', '', $headers['Authorization']) : '';
+        $payload = json_decode(file_get_contents('php://input'), true);
+        if (!$payload)
+            return $this->res(false, "Datos inválidos");
 
-        if (empty($token)) {
-            $this->sendResponse(['status' => false, 'msg' => 'Token no proporcionado'], 401);
-            return;
+        $idTorneo = intval($payload['id_torneo'] ?? 0);
+        $tipo = $payload['tipo_gasto'] ?? '';
+        $concepto = $payload['concepto'] ?? '';
+        $beneficiario = $payload['beneficiario'] ?? '';
+        $monto = floatval($payload['monto'] ?? 0);
+        $fecha = $payload['fecha_pago'] ?? date('Y-m-d');
+        $forma = $payload['forma_pago'] ?? 'EFECTIVO';
+        $comprobante = $payload['numero_comprobante'] ?? '';
+        $soporte = $payload['documento_soporte'] ?? '';
+        $obs = $payload['observaciones'] ?? '';
+        $idUsuario = $this->userData['id_user'];
+
+        if ($idTorneo <= 0 || empty($concepto) || $monto <= 0) {
+            return $this->res(false, "Faltan datos obligatorios o monto inválido");
         }
 
-        $jwt = new JwtHandler();
-        $jwtData = $jwt->validateToken($token);
-        if (!$jwtData) {
-            $this->sendResponse(['status' => false, 'msg' => 'Token inválido o expirado'], 401);
-            return;
+        try {
+            $request = $this->model->insertarGasto($idTorneo, $tipo, $concepto, $beneficiario, $monto, $fecha, $forma, $comprobante, $soporte, $obs, $idUsuario);
+
+            if ($request > 0) {
+                return $this->res(true, "Gasto registrado correctamente", ["id_pago" => $request]);
+            } else {
+                return $this->res(false, "Error al guardar el gasto");
+            }
+        } catch (Exception $e) {
+            return $this->res(false, "Error de base de datos: " . $e->getMessage());
         }
+    }
 
-        $idPago = intval($params);
-        if ($idPago <= 0) {
-            $this->sendResponse(['status' => false, 'msg' => 'ID de pago inválido'], 400);
-            return;
-        }
+    public function anular($idPago)
+    {
+        $payload = json_decode(file_get_contents('php://input'), true);
+        $motivo = $payload['motivo'] ?? 'Anulación administrativa';
 
-        $model = new PagosModel();
-        $gasto = $model->getGasto($idPago);
+        if (empty($idPago))
+            return $this->res(false, "ID inválido");
 
-        if ($gasto) {
-            $this->sendResponse([
-                'status' => true,
-                'data' => $gasto
-            ]);
+        $request = $this->model->anularGasto($idPago, $motivo);
+        if ($request) {
+            return $this->res(true, "Gasto anulado correctamente");
         } else {
-            $this->sendResponse([
-                'status' => false,
-                'msg' => 'Gasto no encontrado'
-            ], 404);
+            return $this->res(false, "Error al anular el gasto");
         }
-    }
-
-    /**
-     * POST: Crea un gasto
-     * Endpoint: Pagos/crear
-     */
-    public function crear($params)
-    {
-        $headers = getallheaders();
-        $token = isset($headers['Authorization']) ? str_replace('Bearer ', '', $headers['Authorization']) : '';
-
-        if (empty($token)) {
-            $this->sendResponse(['status' => false, 'msg' => 'Token no proporcionado'], 401);
-            return;
-        }
-
-        $jwt = new JwtHandler();
-        $jwtData = $jwt->validateToken($token);
-        if (!$jwtData) {
-            $this->sendResponse(['status' => false, 'msg' => 'Token inválido o expirado'], 401);
-            return;
-        }
-
-        $data = json_decode(file_get_contents('php://input'), true);
-
-        if (
-            !isset($data['id_torneo']) || !isset($data['tipo_gasto']) ||
-            !isset($data['concepto']) || !isset($data['beneficiario']) ||
-            !isset($data['monto']) || !isset($data['fecha_pago']) || !isset($data['forma_pago'])
-        ) {
-            $this->sendResponse(['status' => false, 'msg' => 'Datos incompletos'], 400);
-            return;
-        }
-
-        $data['usuario_registro'] = $jwtData['id_persona'];
-
-        $model = new PagosModel();
-        $idPago = $model->crearGasto($data);
-
-        if ($idPago) {
-            $this->sendResponse([
-                'status' => true,
-                'msg' => 'Gasto registrado exitosamente',
-                'id_pago' => $idPago
-            ]);
-        } else {
-            $this->sendResponse([
-                'status' => false,
-                'msg' => 'Error al registrar el gasto'
-            ], 500);
-        }
-    }
-
-    /**
-     * PUT: Actualiza un gasto
-     * Endpoint: Pagos/actualizar/{idPago}
-     */
-    public function actualizar($params)
-    {
-        $headers = getallheaders();
-        $token = isset($headers['Authorization']) ? str_replace('Bearer ', '', $headers['Authorization']) : '';
-
-        if (empty($token)) {
-            $this->sendResponse(['status' => false, 'msg' => 'Token no proporcionado'], 401);
-            return;
-        }
-
-        $jwt = new JwtHandler();
-        $jwtData = $jwt->validateToken($token);
-        if (!$jwtData) {
-            $this->sendResponse(['status' => false, 'msg' => 'Token inválido o expirado'], 401);
-            return;
-        }
-
-        $idPago = intval($params);
-        if ($idPago <= 0) {
-            $this->sendResponse(['status' => false, 'msg' => 'ID de pago inválido'], 400);
-            return;
-        }
-
-        $data = json_decode(file_get_contents('php://input'), true);
-
-        $model = new PagosModel();
-        $result = $model->actualizarGasto($idPago, $data);
-
-        if ($result) {
-            $this->sendResponse([
-                'status' => true,
-                'msg' => 'Gasto actualizado exitosamente'
-            ]);
-        } else {
-            $this->sendResponse([
-                'status' => false,
-                'msg' => 'Error al actualizar el gasto'
-            ], 500);
-        }
-    }
-
-    /**
-     * PUT: Anula un gasto
-     * Endpoint: Pagos/anular/{idPago}
-     */
-    public function anular($params)
-    {
-        $headers = getallheaders();
-        $token = isset($headers['Authorization']) ? str_replace('Bearer ', '', $headers['Authorization']) : '';
-
-        if (empty($token)) {
-            $this->sendResponse(['status' => false, 'msg' => 'Token no proporcionado'], 401);
-            return;
-        }
-
-        $jwt = new JwtHandler();
-        $jwtData = $jwt->validateToken($token);
-        if (!$jwtData) {
-            $this->sendResponse(['status' => false, 'msg' => 'Token inválido o expirado'], 401);
-            return;
-        }
-
-        $idPago = intval($params);
-        if ($idPago <= 0) {
-            $this->sendResponse(['status' => false, 'msg' => 'ID de pago inválido'], 400);
-            return;
-        }
-
-        $data = json_decode(file_get_contents('php://input'), true);
-        $motivoAnulacion = $data['motivo_anulacion'] ?? 'Anulado por administrador';
-
-        $model = new PagosModel();
-        $result = $model->anularGasto($idPago, $motivoAnulacion);
-
-        if ($result) {
-            $this->sendResponse([
-                'status' => true,
-                'msg' => 'Gasto anulado exitosamente'
-            ]);
-        } else {
-            $this->sendResponse([
-                'status' => false,
-                'msg' => 'Error al anular el gasto'
-            ], 500);
-        }
-    }
-
-    /**
-     * GET: Obtiene totales de gastos
-     * Endpoint: Pagos/totales/{idTorneo}
-     */
-    public function totales($params)
-    {
-        $headers = getallheaders();
-        $token = isset($headers['Authorization']) ? str_replace('Bearer ', '', $headers['Authorization']) : '';
-
-        if (empty($token)) {
-            $this->sendResponse(['status' => false, 'msg' => 'Token no proporcionado'], 401);
-            return;
-        }
-
-        $jwt = new JwtHandler();
-        $jwtData = $jwt->validateToken($token);
-        if (!$jwtData) {
-            $this->sendResponse(['status' => false, 'msg' => 'Token inválido o expirado'], 401);
-            return;
-        }
-
-        $idTorneo = intval($params);
-        if ($idTorneo <= 0) {
-            $this->sendResponse(['status' => false, 'msg' => 'ID de torneo inválido'], 400);
-            return;
-        }
-
-        $fechaInicio = $_GET['fechaInicio'] ?? null;
-        $fechaFin = $_GET['fechaFin'] ?? null;
-
-        $model = new PagosModel();
-        $porTipo = $model->getTotalGastosPorTipo($idTorneo, $fechaInicio, $fechaFin);
-        $porFormaPago = $model->getTotalGastosPorFormaPago($idTorneo, $fechaInicio, $fechaFin);
-        $total = $model->getTotalGastos($idTorneo, $fechaInicio, $fechaFin);
-
-        $this->sendResponse([
-            'status' => true,
-            'data' => [
-                'por_tipo' => $porTipo,
-                'por_forma_pago' => $porFormaPago,
-                'total' => $total
-            ]
-        ]);
-    }
-
-    /**
-     * Envía respuesta JSON
-     */
-    private function sendResponse($data, $statusCode = 200)
-    {
-        http_response_code($statusCode);
-        header('Content-Type: application/json');
-        echo json_encode($data);
-        exit;
     }
 }
