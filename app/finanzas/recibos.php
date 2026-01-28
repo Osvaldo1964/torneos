@@ -140,8 +140,20 @@ require_once(__DIR__ . '/../template/header.php');
                                         <textarea class="form-control" id="recObs" rows="2" placeholder="Nota adicional..."></textarea>
                                     </div>
 
+                                    <div class="mb-3">
+                                        <div class="form-check form-switch p-3 bg-light rounded border">
+                                            <input class="form-check-input" type="checkbox" id="checkEnviarEmail" checked>
+                                            <label class="form-check-input-label fw-bold ms-2" for="checkEnviarEmail">
+                                                <i class="fa-solid fa-envelope me-1"></i> Enviar por Correo
+                                            </label>
+                                            <div class="small text-muted mt-1" style="font-size: 11px;">
+                                                Se enviará el PDF al correo registrado del jugador/equipo.
+                                            </div>
+                                        </div>
+                                    </div>
+
                                     <button type="button" class="btn btn-success btn-lg w-100 shadow-sm" id="btnEmitirRecibo" onclick="procesarPago()" disabled>
-                                        <i class="fa-solid fa-print me-2"></i>Emitir Recibo
+                                        <i class="fa-solid fa-receipt me-2"></i>Emitir Recibo
                                     </button>
                                 </form>
                             </div>

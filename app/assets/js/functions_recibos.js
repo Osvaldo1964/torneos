@@ -107,6 +107,7 @@ async function cargarPendientes() {
                             data-id="${item.id_item}" 
                             data-concepto="${item.concepto}" 
                             data-monto="${item.monto}" 
+                            data-email="${item.email || ''}" 
                             onchange="toggleItem(this)">
                     </td>
                     <td>
@@ -141,7 +142,8 @@ function toggleItem(checkbox) {
         id: data.id,
         concepto: data.concepto,
         monto: parseFloat(data.monto),
-        monto_max: parseFloat(data.monto) // Para control de pagos parciales
+        monto_max: parseFloat(data.monto), // Para control de pagos parciales
+        email: data.email
     };
 
     if (checkbox.checked) {
@@ -271,7 +273,11 @@ async function procesarPago() {
                 forma_pago: document.getElementById('recFormaPago').value,
                 referencia: document.getElementById('recReferencia').value,
                 observaciones: document.getElementById('recObs').value,
-                items: itemsSeleccionados
+                items: itemsSeleccionados.map(item => ({
+                    ...item,
+                    email: item.email // El email ya viene en el objeto desde cargarPendientes
+                })),
+                enviar_email: document.getElementById('checkEnviarEmail').checked
             };
 
             try {

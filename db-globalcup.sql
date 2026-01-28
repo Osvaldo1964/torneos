@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 27-01-2026 a las 19:58:18
+-- Tiempo de generación: 28-01-2026 a las 06:11:59
 -- Versión del servidor: 10.4.32-MariaDB
 -- Versión de PHP: 8.2.12
 
@@ -20,6 +20,113 @@ SET time_zone = "+00:00";
 --
 -- Base de datos: `db-globalcup`
 --
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `arbitros`
+--
+
+CREATE TABLE `arbitros` (
+  `id_arbitro` int(11) NOT NULL,
+  `id_persona` int(11) DEFAULT NULL,
+  `nombre_completo` varchar(255) NOT NULL,
+  `identificacion` varchar(50) DEFAULT NULL,
+  `telefono` varchar(20) DEFAULT NULL,
+  `email` varchar(100) DEFAULT NULL,
+  `estado` tinyint(4) DEFAULT 1,
+  `fecha_creacion` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `configuracion_arbitros`
+--
+
+CREATE TABLE `configuracion_arbitros` (
+  `id_configuracion` int(11) NOT NULL,
+  `id_torneo` int(11) NOT NULL,
+  `monto_por_partido` decimal(10,2) NOT NULL,
+  `estado` tinyint(4) DEFAULT 1,
+  `fecha_creacion` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `configuracion_cuotas`
+--
+
+CREATE TABLE `configuracion_cuotas` (
+  `id_configuracion` int(11) NOT NULL,
+  `id_torneo` int(11) NOT NULL,
+  `monto_mensual` decimal(10,2) NOT NULL,
+  `dia_vencimiento` int(11) DEFAULT 5,
+  `estado` tinyint(4) DEFAULT 1,
+  `fecha_creacion` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Volcado de datos para la tabla `configuracion_cuotas`
+--
+
+INSERT INTO `configuracion_cuotas` (`id_configuracion`, `id_torneo`, `monto_mensual`, `dia_vencimiento`, `estado`, `fecha_creacion`) VALUES
+(1, 2, 7000.00, 5, 1, '2026-01-28 01:28:34');
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `configuracion_sanciones`
+--
+
+CREATE TABLE `configuracion_sanciones` (
+  `id_configuracion` int(11) NOT NULL,
+  `id_torneo` int(11) NOT NULL,
+  `monto_amarilla` decimal(10,2) DEFAULT 0.00,
+  `monto_roja` decimal(10,2) DEFAULT 0.00,
+  `estado` tinyint(4) DEFAULT 1,
+  `fecha_creacion` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Volcado de datos para la tabla `configuracion_sanciones`
+--
+
+INSERT INTO `configuracion_sanciones` (`id_configuracion`, `id_torneo`, `monto_amarilla`, `monto_roja`, `estado`, `fecha_creacion`) VALUES
+(1, 2, 10000.00, 20000.00, 1, '2026-01-28 04:17:38');
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `cuotas_jugadores`
+--
+
+CREATE TABLE `cuotas_jugadores` (
+  `id_cuota` int(11) NOT NULL,
+  `id_torneo` int(11) NOT NULL,
+  `id_jugador` int(11) NOT NULL,
+  `id_equipo` int(11) NOT NULL,
+  `mes` int(11) NOT NULL,
+  `anio` int(11) NOT NULL,
+  `monto` decimal(10,2) NOT NULL,
+  `pago_acumulado` decimal(10,2) DEFAULT 0.00,
+  `fecha_vencimiento` date NOT NULL,
+  `estado` enum('PENDIENTE','PAGADO','VENCIDO','PARCIAL') DEFAULT 'PENDIENTE',
+  `fecha_pago` date DEFAULT NULL,
+  `id_recibo` int(11) DEFAULT NULL,
+  `observaciones` text DEFAULT NULL,
+  `fecha_creacion` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Volcado de datos para la tabla `cuotas_jugadores`
+--
+
+INSERT INTO `cuotas_jugadores` (`id_cuota`, `id_torneo`, `id_jugador`, `id_equipo`, `mes`, `anio`, `monto`, `pago_acumulado`, `fecha_vencimiento`, `estado`, `fecha_pago`, `id_recibo`, `observaciones`, `fecha_creacion`) VALUES
+(1, 2, 3, 2, 1, 2026, 7000.00, 10000.00, '2026-01-05', 'PAGADO', '2026-01-27', 3, NULL, '2026-01-28 01:33:46'),
+(2, 2, 3, 2, 2, 2026, 7000.00, 0.00, '2026-02-05', 'PENDIENTE', NULL, NULL, NULL, '2026-01-28 01:33:46'),
+(3, 2, 3, 2, 3, 2026, 7000.00, 7000.00, '2026-03-05', 'PAGADO', '2026-01-27', 4, NULL, '2026-01-28 01:33:46');
 
 -- --------------------------------------------------------
 
@@ -233,7 +340,8 @@ INSERT INTO `modulos` (`id_modulo`, `titulo`, `descripcion`, `estado`) VALUES
 (6, 'Match Center', 'Registro de resultados y arbitraje', 1),
 (7, 'Finanzas', 'Pagos, facturación y multas', 1),
 (8, 'Usuarios', 'Gestión de usuarios del sistema', 1),
-(9, 'Roles', 'Gestión de roles de usuario', 1);
+(9, 'Roles', 'Gestión de roles de usuario', 1),
+(10, 'Posiciones', 'Tabla de posiciones y estadísticas por grupo', 1);
 
 -- --------------------------------------------------------
 
@@ -249,6 +357,50 @@ CREATE TABLE `pagos` (
   `metodo_pago` varchar(50) DEFAULT 'EFECTIVO',
   `comprobante` varchar(255) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `pagos_arbitros`
+--
+
+CREATE TABLE `pagos_arbitros` (
+  `id_pago` int(11) NOT NULL,
+  `id_partido` int(11) NOT NULL,
+  `id_arbitro` int(11) NOT NULL,
+  `monto` decimal(10,2) NOT NULL,
+  `fecha_pago` date DEFAULT NULL,
+  `estado` enum('PENDIENTE','PAGADO') DEFAULT 'PENDIENTE',
+  `numero_comprobante` varchar(50) DEFAULT NULL,
+  `forma_pago` enum('EFECTIVO','TRANSFERENCIA','OTRO') DEFAULT NULL,
+  `observaciones` text DEFAULT NULL,
+  `usuario_registro` int(11) NOT NULL,
+  `fecha_creacion` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `pagos_gastos`
+--
+
+CREATE TABLE `pagos_gastos` (
+  `id_pago` int(11) NOT NULL,
+  `id_torneo` int(11) NOT NULL,
+  `tipo_gasto` enum('ESCENARIO','ARBITRO','PREMIO','MATERIAL','ADMINISTRATIVO','OTRO') NOT NULL,
+  `concepto` varchar(255) NOT NULL,
+  `beneficiario` varchar(255) NOT NULL,
+  `monto` decimal(10,2) NOT NULL,
+  `fecha_pago` date NOT NULL,
+  `numero_comprobante` varchar(50) DEFAULT NULL,
+  `forma_pago` enum('EFECTIVO','TRANSFERENCIA','CHEQUE','OTRO') DEFAULT NULL,
+  `documento_soporte` varchar(255) DEFAULT NULL,
+  `estado` enum('ACTIVO','ANULADO') DEFAULT 'ACTIVO',
+  `motivo_anulacion` text DEFAULT NULL,
+  `observaciones` text DEFAULT NULL,
+  `usuario_registro` int(11) NOT NULL,
+  `fecha_creacion` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -280,7 +432,7 @@ CREATE TABLE `partidos` (
 --
 
 INSERT INTO `partidos` (`id_partido`, `id_torneo`, `id_local`, `id_visitante`, `id_arbitro`, `fecha_partido`, `goles_local`, `goles_visitante`, `costo_arbitraje`, `arbitraje_pagado`, `estado`, `id_fase`, `id_grupo`, `nro_jornada`, `parent_partido_a`, `parent_partido_b`) VALUES
-(1, 2, 2, 3, NULL, NULL, 0, 0, 0.00, 0, 'PENDIENTE', 1, 1, 1, NULL, NULL);
+(1, 2, 2, 3, NULL, NULL, 2, 1, 0.00, 0, 'JUGADO', 1, 1, 1, NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -304,8 +456,9 @@ CREATE TABLE `partido_eventos` (
 --
 
 INSERT INTO `partido_eventos` (`id_evento`, `id_partido`, `id_jugador`, `id_equipo`, `tipo_evento`, `minuto`, `observacion`, `created_at`) VALUES
-(2, 1, 3, 2, 'AMARILLA', 25, '', '2026-01-27 18:57:48'),
-(3, 1, 3, 2, 'GOL', 15, '', '2026-01-27 18:57:48');
+(6, 1, 3, 2, 'GOL', 15, '', '2026-01-28 04:21:51'),
+(7, 1, 3, 2, 'AMARILLA', 25, '', '2026-01-28 04:21:51'),
+(8, 1, 3, 2, 'AMARILLA', 35, '', '2026-01-28 04:21:51');
 
 -- --------------------------------------------------------
 
@@ -351,7 +504,11 @@ INSERT INTO `permisos` (`id_permiso`, `id_rol`, `id_modulo`, `r`, `w`, `u`, `d`)
 (31, 4, 6, 0, 0, 0, 0),
 (32, 4, 7, 0, 0, 0, 0),
 (33, 4, 8, 0, 0, 0, 0),
-(34, 4, 9, 0, 0, 0, 0);
+(34, 4, 9, 0, 0, 0, 0),
+(35, 1, 10, 1, 1, 1, 1),
+(36, 2, 10, 1, 0, 0, 0),
+(37, 3, 10, 1, 0, 0, 0),
+(38, 4, 10, 1, 0, 0, 0);
 
 -- --------------------------------------------------------
 
@@ -412,6 +569,62 @@ INSERT INTO `persona_roles` (`id_persona_rol`, `id_persona`, `id_rol`, `id_liga`
 -- --------------------------------------------------------
 
 --
+-- Estructura de tabla para la tabla `recibos_detalle`
+--
+
+CREATE TABLE `recibos_detalle` (
+  `id_detalle` int(11) NOT NULL,
+  `id_recibo` int(11) NOT NULL,
+  `tipo_item` enum('CUOTA','SANCION','OTRO') NOT NULL,
+  `id_item` int(11) NOT NULL,
+  `concepto` varchar(255) NOT NULL,
+  `monto` decimal(10,2) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Volcado de datos para la tabla `recibos_detalle`
+--
+
+INSERT INTO `recibos_detalle` (`id_detalle`, `id_recibo`, `tipo_item`, `id_item`, `concepto`, `monto`) VALUES
+(1, 3, 'CUOTA', 1, 'CUOTA - PRUEBA', 10000.00),
+(2, 4, 'SANCION', 2, 'Sanción por tarjeta amarilla', 10000.00),
+(3, 4, 'CUOTA', 3, 'CUOTA - Marzo 2026', 7000.00),
+(4, 5, 'SANCION', 1, 'Daños en el mobiliario', 50000.00);
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `recibos_ingreso`
+--
+
+CREATE TABLE `recibos_ingreso` (
+  `id_recibo` int(11) NOT NULL,
+  `id_torneo` int(11) NOT NULL,
+  `numero_recibo` varchar(50) NOT NULL,
+  `forma_pago` enum('EFECTIVO','TRANSFERENCIA','TARJETA','OTRO') DEFAULT 'EFECTIVO',
+  `referencia` varchar(100) DEFAULT NULL,
+  `pagador` varchar(255) DEFAULT NULL,
+  `total` decimal(10,2) NOT NULL,
+  `fecha_pago` date NOT NULL,
+  `id_usuario_registro` int(11) NOT NULL,
+  `estado` enum('ACTIVO','ANULADO') DEFAULT 'ACTIVO',
+  `motivo_anulacion` text DEFAULT NULL,
+  `observaciones` text DEFAULT NULL,
+  `fecha_creacion` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Volcado de datos para la tabla `recibos_ingreso`
+--
+
+INSERT INTO `recibos_ingreso` (`id_recibo`, `id_torneo`, `numero_recibo`, `forma_pago`, `referencia`, `pagador`, `total`, `fecha_pago`, `id_usuario_registro`, `estado`, `motivo_anulacion`, `observaciones`, `fecha_creacion`) VALUES
+(3, 2, 'REC-00001', 'EFECTIVO', '', 'Pagador Test', 10000.00, '2026-01-27', 1, 'ACTIVO', NULL, 'Sin obs', '2026-01-28 04:48:07'),
+(4, 2, 'REC-00002', 'EFECTIVO', 'FACT 1 Y 2', 'OSVALDO VILLALOBOS', 17000.00, '2026-01-27', 4, 'ACTIVO', NULL, 'PRUEBA RECIBO', '2026-01-28 04:55:38'),
+(5, 2, 'REC-00003', 'EFECTIVO', 'FACT DAÑOS', 'OSVALDO VILLALOBOS', 50000.00, '2026-01-28', 4, 'ACTIVO', NULL, 'PRUEBA DE OTRO PAGO', '2026-01-28 05:00:29');
+
+-- --------------------------------------------------------
+
+--
 -- Estructura de tabla para la tabla `roles`
 --
 
@@ -432,6 +645,38 @@ INSERT INTO `roles` (`id_rol`, `nombre_rol`, `descripcion`, `estado`, `created_a
 (2, 'Liga Admin', 'Administrador de una liga específica', 1, '2026-01-26 19:29:16'),
 (3, 'Delegado', 'Representante de un equipo', 1, '2026-01-26 19:29:16'),
 (4, 'Jugador', 'Deportista registrado en el sistema', 1, '2026-01-26 19:29:16');
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `sanciones_economicas`
+--
+
+CREATE TABLE `sanciones_economicas` (
+  `id_sancion` int(11) NOT NULL,
+  `id_torneo` int(11) NOT NULL,
+  `tipo_sancion` enum('AMARILLA','ROJA','COMPORTAMIENTO','NO_PRESENTACION','OTRA') NOT NULL,
+  `id_equipo` int(11) DEFAULT NULL,
+  `id_jugador` int(11) DEFAULT NULL,
+  `id_partido` int(11) DEFAULT NULL,
+  `concepto` varchar(255) NOT NULL,
+  `monto` decimal(10,2) NOT NULL,
+  `pago_acumulado` decimal(10,2) DEFAULT 0.00,
+  `estado` enum('PENDIENTE','PAGADO','ANULADO','PARCIAL') DEFAULT 'PENDIENTE',
+  `fecha_sancion` date NOT NULL,
+  `fecha_pago` date DEFAULT NULL,
+  `id_recibo` int(11) DEFAULT NULL,
+  `observaciones` text DEFAULT NULL,
+  `fecha_creacion` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Volcado de datos para la tabla `sanciones_economicas`
+--
+
+INSERT INTO `sanciones_economicas` (`id_sancion`, `id_torneo`, `tipo_sancion`, `id_equipo`, `id_jugador`, `id_partido`, `concepto`, `monto`, `pago_acumulado`, `estado`, `fecha_sancion`, `fecha_pago`, `id_recibo`, `observaciones`, `fecha_creacion`) VALUES
+(1, 2, 'COMPORTAMIENTO', 2, 3, NULL, 'Daños en el mobiliario', 50000.00, 50000.00, 'PAGADO', '2026-01-28', '2026-01-28', 5, 'prueba de sanciones', '2026-01-28 04:21:07'),
+(2, 2, 'AMARILLA', 2, 3, 1, 'Sanción por tarjeta amarilla', 10000.00, 10000.00, 'PAGADO', '2026-01-27', '2026-01-27', 4, NULL, '2026-01-28 04:21:51');
 
 -- --------------------------------------------------------
 
@@ -459,7 +704,7 @@ CREATE TABLE `torneos` (
 --
 
 INSERT INTO `torneos` (`id_torneo`, `id_liga`, `nombre`, `logo`, `categoria`, `cuota_jugador`, `valor_amarilla`, `valor_roja`, `valor_arbitraje_base`, `fecha_inicio`, `fecha_fin`, `estado`) VALUES
-(2, 4, 'RODILLONES', 'torneo_1769530182.jpg', 'SENIOR', 6000.00, 5000.00, 8000.00, 25000.00, '2026-01-01', '2026-01-31', 'PROGRAMADO');
+(2, 4, 'RODILLONES', 'torneo_1769530182.jpg', 'SENIOR', 6000.00, 5000.00, 8000.00, 25000.00, '2026-01-01', '2026-03-31', 'PROGRAMADO');
 
 -- --------------------------------------------------------
 
@@ -507,6 +752,48 @@ INSERT INTO `torneo_fases` (`id_fase`, `id_torneo`, `nombre`, `tipo`, `ida_vuelt
 --
 -- Índices para tablas volcadas
 --
+
+--
+-- Indices de la tabla `arbitros`
+--
+ALTER TABLE `arbitros`
+  ADD PRIMARY KEY (`id_arbitro`),
+  ADD KEY `id_persona` (`id_persona`),
+  ADD KEY `idx_nombre` (`nombre_completo`),
+  ADD KEY `idx_identificacion` (`identificacion`);
+
+--
+-- Indices de la tabla `configuracion_arbitros`
+--
+ALTER TABLE `configuracion_arbitros`
+  ADD PRIMARY KEY (`id_configuracion`),
+  ADD KEY `idx_torneo` (`id_torneo`);
+
+--
+-- Indices de la tabla `configuracion_cuotas`
+--
+ALTER TABLE `configuracion_cuotas`
+  ADD PRIMARY KEY (`id_configuracion`),
+  ADD KEY `idx_torneo` (`id_torneo`);
+
+--
+-- Indices de la tabla `configuracion_sanciones`
+--
+ALTER TABLE `configuracion_sanciones`
+  ADD PRIMARY KEY (`id_configuracion`),
+  ADD KEY `idx_torneo` (`id_torneo`);
+
+--
+-- Indices de la tabla `cuotas_jugadores`
+--
+ALTER TABLE `cuotas_jugadores`
+  ADD PRIMARY KEY (`id_cuota`),
+  ADD UNIQUE KEY `unique_cuota` (`id_jugador`,`id_torneo`,`mes`,`anio`),
+  ADD KEY `idx_torneo` (`id_torneo`),
+  ADD KEY `idx_jugador` (`id_jugador`),
+  ADD KEY `idx_equipo` (`id_equipo`),
+  ADD KEY `idx_estado` (`estado`),
+  ADD KEY `idx_fecha_vencimiento` (`fecha_vencimiento`);
 
 --
 -- Indices de la tabla `detalles_factura`
@@ -589,6 +876,27 @@ ALTER TABLE `pagos`
   ADD KEY `id_factura` (`id_factura`);
 
 --
+-- Indices de la tabla `pagos_arbitros`
+--
+ALTER TABLE `pagos_arbitros`
+  ADD PRIMARY KEY (`id_pago`),
+  ADD KEY `usuario_registro` (`usuario_registro`),
+  ADD KEY `idx_partido` (`id_partido`),
+  ADD KEY `idx_arbitro` (`id_arbitro`),
+  ADD KEY `idx_estado` (`estado`);
+
+--
+-- Indices de la tabla `pagos_gastos`
+--
+ALTER TABLE `pagos_gastos`
+  ADD PRIMARY KEY (`id_pago`),
+  ADD KEY `usuario_registro` (`usuario_registro`),
+  ADD KEY `idx_torneo` (`id_torneo`),
+  ADD KEY `idx_tipo` (`tipo_gasto`),
+  ADD KEY `idx_estado` (`estado`),
+  ADD KEY `idx_fecha` (`fecha_pago`);
+
+--
 -- Indices de la tabla `partidos`
 --
 ALTER TABLE `partidos`
@@ -631,10 +939,40 @@ ALTER TABLE `persona_roles`
   ADD KEY `id_rol` (`id_rol`);
 
 --
+-- Indices de la tabla `recibos_detalle`
+--
+ALTER TABLE `recibos_detalle`
+  ADD PRIMARY KEY (`id_detalle`),
+  ADD KEY `id_recibo` (`id_recibo`);
+
+--
+-- Indices de la tabla `recibos_ingreso`
+--
+ALTER TABLE `recibos_ingreso`
+  ADD PRIMARY KEY (`id_recibo`),
+  ADD UNIQUE KEY `numero_recibo` (`numero_recibo`),
+  ADD KEY `idx_torneo` (`id_torneo`),
+  ADD KEY `idx_estado` (`estado`),
+  ADD KEY `idx_fecha` (`fecha_pago`),
+  ADD KEY `fk_recibos_usuario` (`id_usuario_registro`);
+
+--
 -- Indices de la tabla `roles`
 --
 ALTER TABLE `roles`
   ADD PRIMARY KEY (`id_rol`);
+
+--
+-- Indices de la tabla `sanciones_economicas`
+--
+ALTER TABLE `sanciones_economicas`
+  ADD PRIMARY KEY (`id_sancion`),
+  ADD KEY `id_partido` (`id_partido`),
+  ADD KEY `idx_torneo` (`id_torneo`),
+  ADD KEY `idx_equipo` (`id_equipo`),
+  ADD KEY `idx_jugador` (`id_jugador`),
+  ADD KEY `idx_estado` (`estado`),
+  ADD KEY `idx_tipo` (`tipo_sancion`);
 
 --
 -- Indices de la tabla `torneos`
@@ -660,6 +998,36 @@ ALTER TABLE `torneo_fases`
 --
 -- AUTO_INCREMENT de las tablas volcadas
 --
+
+--
+-- AUTO_INCREMENT de la tabla `arbitros`
+--
+ALTER TABLE `arbitros`
+  MODIFY `id_arbitro` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT de la tabla `configuracion_arbitros`
+--
+ALTER TABLE `configuracion_arbitros`
+  MODIFY `id_configuracion` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT de la tabla `configuracion_cuotas`
+--
+ALTER TABLE `configuracion_cuotas`
+  MODIFY `id_configuracion` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
+-- AUTO_INCREMENT de la tabla `configuracion_sanciones`
+--
+ALTER TABLE `configuracion_sanciones`
+  MODIFY `id_configuracion` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
+-- AUTO_INCREMENT de la tabla `cuotas_jugadores`
+--
+ALTER TABLE `cuotas_jugadores`
+  MODIFY `id_cuota` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT de la tabla `detalles_factura`
@@ -707,12 +1075,24 @@ ALTER TABLE `ligas`
 -- AUTO_INCREMENT de la tabla `modulos`
 --
 ALTER TABLE `modulos`
-  MODIFY `id_modulo` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
+  MODIFY `id_modulo` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
 
 --
 -- AUTO_INCREMENT de la tabla `pagos`
 --
 ALTER TABLE `pagos`
+  MODIFY `id_pago` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT de la tabla `pagos_arbitros`
+--
+ALTER TABLE `pagos_arbitros`
+  MODIFY `id_pago` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT de la tabla `pagos_gastos`
+--
+ALTER TABLE `pagos_gastos`
   MODIFY `id_pago` int(11) NOT NULL AUTO_INCREMENT;
 
 --
@@ -725,13 +1105,13 @@ ALTER TABLE `partidos`
 -- AUTO_INCREMENT de la tabla `partido_eventos`
 --
 ALTER TABLE `partido_eventos`
-  MODIFY `id_evento` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id_evento` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
 --
 -- AUTO_INCREMENT de la tabla `permisos`
 --
 ALTER TABLE `permisos`
-  MODIFY `id_permiso` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=35;
+  MODIFY `id_permiso` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=39;
 
 --
 -- AUTO_INCREMENT de la tabla `personas`
@@ -746,10 +1126,28 @@ ALTER TABLE `persona_roles`
   MODIFY `id_persona_rol` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
+-- AUTO_INCREMENT de la tabla `recibos_detalle`
+--
+ALTER TABLE `recibos_detalle`
+  MODIFY `id_detalle` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+
+--
+-- AUTO_INCREMENT de la tabla `recibos_ingreso`
+--
+ALTER TABLE `recibos_ingreso`
+  MODIFY `id_recibo` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+
+--
 -- AUTO_INCREMENT de la tabla `roles`
 --
 ALTER TABLE `roles`
   MODIFY `id_rol` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+
+--
+-- AUTO_INCREMENT de la tabla `sanciones_economicas`
+--
+ALTER TABLE `sanciones_economicas`
+  MODIFY `id_sancion` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT de la tabla `torneos`
@@ -766,6 +1164,38 @@ ALTER TABLE `torneo_fases`
 --
 -- Restricciones para tablas volcadas
 --
+
+--
+-- Filtros para la tabla `arbitros`
+--
+ALTER TABLE `arbitros`
+  ADD CONSTRAINT `arbitros_ibfk_1` FOREIGN KEY (`id_persona`) REFERENCES `personas` (`id_persona`) ON DELETE SET NULL;
+
+--
+-- Filtros para la tabla `configuracion_arbitros`
+--
+ALTER TABLE `configuracion_arbitros`
+  ADD CONSTRAINT `configuracion_arbitros_ibfk_1` FOREIGN KEY (`id_torneo`) REFERENCES `torneos` (`id_torneo`) ON DELETE CASCADE;
+
+--
+-- Filtros para la tabla `configuracion_cuotas`
+--
+ALTER TABLE `configuracion_cuotas`
+  ADD CONSTRAINT `configuracion_cuotas_ibfk_1` FOREIGN KEY (`id_torneo`) REFERENCES `torneos` (`id_torneo`) ON DELETE CASCADE;
+
+--
+-- Filtros para la tabla `configuracion_sanciones`
+--
+ALTER TABLE `configuracion_sanciones`
+  ADD CONSTRAINT `configuracion_sanciones_ibfk_1` FOREIGN KEY (`id_torneo`) REFERENCES `torneos` (`id_torneo`) ON DELETE CASCADE;
+
+--
+-- Filtros para la tabla `cuotas_jugadores`
+--
+ALTER TABLE `cuotas_jugadores`
+  ADD CONSTRAINT `cuotas_jugadores_ibfk_1` FOREIGN KEY (`id_torneo`) REFERENCES `torneos` (`id_torneo`) ON DELETE CASCADE,
+  ADD CONSTRAINT `cuotas_jugadores_ibfk_2` FOREIGN KEY (`id_jugador`) REFERENCES `jugadores` (`id_jugador`) ON DELETE CASCADE,
+  ADD CONSTRAINT `cuotas_jugadores_ibfk_3` FOREIGN KEY (`id_equipo`) REFERENCES `equipos` (`id_equipo`) ON DELETE CASCADE;
 
 --
 -- Filtros para la tabla `detalles_factura`
@@ -829,6 +1259,21 @@ ALTER TABLE `pagos`
   ADD CONSTRAINT `pagos_ibfk_1` FOREIGN KEY (`id_factura`) REFERENCES `facturas` (`id_factura`) ON DELETE CASCADE;
 
 --
+-- Filtros para la tabla `pagos_arbitros`
+--
+ALTER TABLE `pagos_arbitros`
+  ADD CONSTRAINT `pagos_arbitros_ibfk_1` FOREIGN KEY (`id_partido`) REFERENCES `partidos` (`id_partido`) ON DELETE CASCADE,
+  ADD CONSTRAINT `pagos_arbitros_ibfk_2` FOREIGN KEY (`id_arbitro`) REFERENCES `arbitros` (`id_arbitro`),
+  ADD CONSTRAINT `pagos_arbitros_ibfk_3` FOREIGN KEY (`usuario_registro`) REFERENCES `personas` (`id_persona`);
+
+--
+-- Filtros para la tabla `pagos_gastos`
+--
+ALTER TABLE `pagos_gastos`
+  ADD CONSTRAINT `pagos_gastos_ibfk_1` FOREIGN KEY (`id_torneo`) REFERENCES `torneos` (`id_torneo`) ON DELETE CASCADE,
+  ADD CONSTRAINT `pagos_gastos_ibfk_2` FOREIGN KEY (`usuario_registro`) REFERENCES `personas` (`id_persona`);
+
+--
 -- Filtros para la tabla `partidos`
 --
 ALTER TABLE `partidos`
@@ -856,6 +1301,28 @@ ALTER TABLE `personas`
 ALTER TABLE `persona_roles`
   ADD CONSTRAINT `fk_persona_rol_persona` FOREIGN KEY (`id_persona`) REFERENCES `personas` (`id_persona`) ON DELETE CASCADE,
   ADD CONSTRAINT `fk_persona_rol_rol` FOREIGN KEY (`id_rol`) REFERENCES `roles` (`id_rol`) ON DELETE CASCADE;
+
+--
+-- Filtros para la tabla `recibos_detalle`
+--
+ALTER TABLE `recibos_detalle`
+  ADD CONSTRAINT `recibos_detalle_ibfk_1` FOREIGN KEY (`id_recibo`) REFERENCES `recibos_ingreso` (`id_recibo`);
+
+--
+-- Filtros para la tabla `recibos_ingreso`
+--
+ALTER TABLE `recibos_ingreso`
+  ADD CONSTRAINT `fk_recibos_usuario` FOREIGN KEY (`id_usuario_registro`) REFERENCES `personas` (`id_persona`),
+  ADD CONSTRAINT `recibos_ingreso_ibfk_1` FOREIGN KEY (`id_torneo`) REFERENCES `torneos` (`id_torneo`) ON DELETE CASCADE;
+
+--
+-- Filtros para la tabla `sanciones_economicas`
+--
+ALTER TABLE `sanciones_economicas`
+  ADD CONSTRAINT `sanciones_economicas_ibfk_1` FOREIGN KEY (`id_torneo`) REFERENCES `torneos` (`id_torneo`) ON DELETE CASCADE,
+  ADD CONSTRAINT `sanciones_economicas_ibfk_2` FOREIGN KEY (`id_equipo`) REFERENCES `equipos` (`id_equipo`) ON DELETE SET NULL,
+  ADD CONSTRAINT `sanciones_economicas_ibfk_3` FOREIGN KEY (`id_jugador`) REFERENCES `jugadores` (`id_jugador`) ON DELETE SET NULL,
+  ADD CONSTRAINT `sanciones_economicas_ibfk_4` FOREIGN KEY (`id_partido`) REFERENCES `partidos` (`id_partido`) ON DELETE SET NULL;
 
 --
 -- Filtros para la tabla `torneos`

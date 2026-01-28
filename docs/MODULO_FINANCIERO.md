@@ -882,6 +882,7 @@ app/
 - [x] Crear plantilla PDF e Impresión
 - [x] Crear interfaz de registro de pagos
 - [x] Integrar con cuotas y sanciones (Soporte Pagos Parciales)
+- [x] Automatización de envío de recibos por email (PHPMailer + Dompdf)
 
 ### Fase 5: Módulo de Árbitros (Semana 5)
 - [ ] Implementar catálogo de árbitros

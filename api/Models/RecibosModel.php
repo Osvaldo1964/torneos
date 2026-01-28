@@ -135,9 +135,14 @@ class RecibosModel extends Mysql
 
     public function selectRecibo(int $idRecibo)
     {
-        $sql = "SELECT r.*, p.nombres as usuario_nombre, p.apellidos as usuario_apellido 
+        $sql = "SELECT r.*, 
+                       p.nombres as usuario_nombre, p.apellidos as usuario_apellido,
+                       t.nombre as nombre_torneo, t.logo as logo_torneo,
+                       l.nombre as nombre_liga, l.logo as logo_liga
                 FROM recibos_ingreso r
                 LEFT JOIN personas p ON r.id_usuario_registro = p.id_persona
+                LEFT JOIN torneos t ON r.id_torneo = t.id_torneo
+                LEFT JOIN ligas l ON t.id_liga = l.id_liga
                 WHERE r.id_recibo = $idRecibo";
         $recibo = $this->select($sql);
 

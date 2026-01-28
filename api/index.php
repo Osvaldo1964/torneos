@@ -6,6 +6,7 @@ require_once("Libraries/Core/Mysql.php");
 require_once("Libraries/Core/Controllers.php");
 require_once("Libraries/Utils/JwtHandler.php");
 require_once("Libraries/Utils/Email.php");
+require_once("Libraries/Utils/PDFHelper.php");
 
 $url = !empty($_GET['url']) ? $_GET['url'] : 'Home/home';
 $arrUrl = explode("/", $url);

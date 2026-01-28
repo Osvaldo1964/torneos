@@ -61,7 +61,43 @@ class Recibos extends Controllers
             );
 
             if ($request > 0) {
-                $this->res(true, "Recibo generado correctamente", ["id_recibo" => $request]);
+                $emailSent = false;
+                $emailTarget = null;
+
+                // Intentar enviar por correo si se solicitó
+                if (!empty($data['enviar_email'])) {
+                    // Buscar el primer correo disponible en los items
+                    foreach ($items as $item) {
+                        if (!empty($item['email'])) {
+                            $emailTarget = $item['email'];
+                            break;
+                        }
+                    }
+
+                    if ($emailTarget) {
+                        // 1. Generar PDF
+                        $pdfData = PDFHelper::createReceiptPDF($request, $this->model);
+
+                        if ($pdfData) {
+                            // 2. Enviar Correo
+                            $emailData = [
+                                'email' => $emailTarget,
+                                'nombre' => $pagador,
+                                'asunto' => "Nuevo Recibo de Pago - " . $pdfData['numero'],
+                                'mensaje' => "Hola <strong>$pagador</strong>,<br><br>Se ha registrado un pago en el sistema. Adjunto encontrarás el comprobante oficial de tu recibo.<br><br>Saludos,<br>Equipo Global Cup",
+                                'adjunto' => $pdfData['path'],
+                                'nombre_adjunto' => $pdfData['filename']
+                            ];
+
+                            $emailSent = Email::sendEmail($emailData);
+
+                            // 3. Limpiar archivo temporal
+                            if (file_exists($pdfData['path'])) unlink($pdfData['path']);
+                        }
+                    }
+                }
+
+                $this->res(true, "Recibo generado correctamente" . ($emailSent ? " y enviado al correo: $emailTarget" : ""), ["id_recibo" => $request, "email_enviado" => $emailSent]);
             } else {
                 $this->res(false, "Error al procesar el pago");
             }
