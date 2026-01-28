@@ -99,5 +99,15 @@ class Equipos extends Controllers
             $this->res(false, "Error al eliminar");
         }
     }
+    public function listarTorneo($idTorneo)
+    {
+        $idTorneo = intval($idTorneo);
+        if ($idTorneo > 0) {
+            require_once("Models/TorneosModel.php");
+            $torneoModel = new TorneosModel();
+            $arrData = $torneoModel->selectInscritos($idTorneo);
+            $this->res(true, "Listado de equipos del torneo", $arrData);
+        }
+        $this->res(false, "ID de torneo inválido");
+    }
 }
-?>

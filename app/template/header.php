@@ -7,10 +7,14 @@
     <title>
         <?= $data['page_title'] ?> - Global Cup
     </title>
-    <link href="assets/css/bootstrap.min.css" rel="stylesheet">
+    <?php
+    // Detectar nivel de profundidad para ajustar rutas
+    $base_path = isset($data['base_path']) ? $data['base_path'] : '';
+    ?>
+    <link href="<?= $base_path ?>assets/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="assets/plugins/fontawesome/css/all.min.css">
-    <link rel="stylesheet" href="assets/plugins/datatables/dataTables.bootstrap5.min.css">
+    <link rel="stylesheet" href="<?= $base_path ?>assets/plugins/fontawesome/css/all.min.css">
+    <link rel="stylesheet" href="<?= $base_path ?>assets/plugins/datatables/dataTables.bootstrap5.min.css">
     <style>
         :root {
             --sidebar-width: 280px;
@@ -128,7 +132,7 @@
         }
     </style>
     <script>
-        if (!localStorage.getItem('gc_token')) window.location.href = "login.php";
+        if (!localStorage.getItem('gc_token')) window.location.href = "<?= $base_path ?>login.php";
     </script>
 </head>
 
@@ -136,31 +140,20 @@
     <div class="sidebar d-flex flex-column">
         <h2 class="mb-5 fw-bold text-nowrap">Global<span>Cup</span></h2>
         <nav class="nav flex-column mb-auto">
-            <a href="dashboard.php" class="nav-link <?= $data['page_name'] == 'dashboard' ? 'active fw-bold' : '' ?>"><i
+            <a href="<?= $base_path ?>dashboard.php" class="nav-link <?= $data['page_name'] == 'dashboard' ? 'active fw-bold' : '' ?>"><i
                     class="fa-solid fa-gauge me-2"></i> Dashboard</a>
-            <a href="roles.php" id="menuRoles"
+            <a href="<?= $base_path ?>roles.php" id="menuRoles"
                 class="nav-link <?= $data['page_name'] == 'roles' ? 'active fw-bold' : '' ?>"><i
                     class="fa-solid fa-key me-2"></i> Roles</a>
-            <a href="usuarios.php" id="menuUsuarios"
+            <a href="<?= $base_path ?>usuarios.php" id="menuUsuarios"
                 class="nav-link <?= $data['page_name'] == 'usuarios' ? 'active fw-bold' : '' ?>"><i
                     class="fa-solid fa-users me-2"></i> Usuarios</a>
-            <a href="ligas.php" id="menuLigas"
-                class="nav-link <?= $data['page_name'] == 'ligas' ? 'active fw-bold' : '' ?>"><i
-                    class="fa-solid fa-building-columns me-2"></i> Ligas</a>
-            <a href="torneos.php" class="nav-link <?= $data['page_name'] == 'torneos' ? 'active fw-bold' : '' ?>"><i
-                    class="fa-solid fa-trophy me-2"></i> Torneos</a>
-            <a href="equipos.php" class="nav-link <?= $data['page_name'] == 'equipos' ? 'active fw-bold' : '' ?>"><i
-                    class="fa-solid fa-shield-halved me-2"></i> Equipos</a>
-            <a href="jugadores.php" class="nav-link <?= $data['page_name'] == 'jugadores' ? 'active fw-bold' : '' ?>"><i
-                    class="fa-solid fa-user-graduate me-2"></i> Jugadores</a>
-            <a href="nominas.php" class="nav-link <?= $data['page_name'] == 'nominas' ? 'active fw-bold' : '' ?>"><i
-                    class="fa-solid fa-clipboard-list me-2"></i> Nóminas</a>
-            <a href="calendario.php"
-                class="nav-link <?= $data['page_name'] == 'calendario' ? 'active fw-bold' : '' ?>"><i
-                    class="fa-solid fa-calendar-days me-2"></i> Calendario</a>
-            <a href="posiciones.php"
-                class="nav-link <?= $data['page_name'] == 'posiciones' ? 'active fw-bold' : '' ?>"><i
-                    class="fa-solid fa-medal me-2"></i> Posiciones</a>
+            <a href="<?= $base_path ?>deportiva.php"
+                class="nav-link <?= $data['page_name'] == 'deportiva' ? 'active fw-bold' : '' ?>"><i
+                    class="fa-solid fa-futbol me-2"></i> Gestión Deportiva</a>
+            <a href="<?= $base_path ?>finanzas.php"
+                class="nav-link <?= $data['page_name'] == 'finanzas' ? 'active fw-bold' : '' ?>"><i
+                    class="fa-solid fa-money-bill-trend-up me-2"></i> Finanzas</a>
         </nav>
         <hr>
         <button class="btn btn-outline-danger btn-sm border-0 text-start" onclick="logout()"><i
@@ -179,7 +172,7 @@
                     <i class="fa-solid fa-bell"></i>
                     <span class="badge-notify">3</span>
                 </div>
-                <a href="../landing/index.php" class="top-icon text-decoration-none">
+                <a href="<?= $base_path ?>../landing/index.php" class="top-icon text-decoration-none">
                     <i class="fa-solid fa-earth-americas"></i>
                 </a>
                 <div class="top-icon">
@@ -198,6 +191,9 @@
 
         <main class="main-content">
             <script>
+                // Base path para rutas dinámicas
+                const BASE_PATH = '<?= $base_path ?>';
+
                 document.addEventListener('DOMContentLoaded', () => {
                     const user = JSON.parse(localStorage.getItem('gc_user'));
                     if (user) {
@@ -236,7 +232,7 @@
                         const avatarImg = document.getElementById('headerUserAvatar');
                         if (avatarImg) {
                             if (user.id_rol != 1 && user.liga_logo && user.liga_logo != "default_logo.png") {
-                                avatarImg.src = `assets/images/logos/${user.liga_logo}`;
+                                avatarImg.src = `${BASE_PATH}assets/images/logos/${user.liga_logo}`;
                                 avatarImg.classList.add('border', 'p-1', 'bg-light');
                             } else {
                                 avatarImg.src = `https://ui-avatars.com/api/?name=${user.nombre}&background=0f172a&color=fff`;

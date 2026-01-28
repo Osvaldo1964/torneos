@@ -7,6 +7,12 @@ $data = [
 require_once("template/header.php");
 ?>
 
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb mb-2">
+        <li class="breadcrumb-item"><a href="deportiva.php" class="text-decoration-none">Gestión Deportiva</a></li>
+        <li class="breadcrumb-item active">Nóminas</li>
+    </ol>
+</nav>
 <div class="row align-items-center mb-4">
     <div class="col-md-4">
         <h2 class="fw-bold m-0 text-dark">Nóminas por Torneo</h2>

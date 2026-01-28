@@ -1,8 +1,8 @@
 # 💰 Módulo Financiero - Global Cup
 
-**Versión:** 1.0 (Análisis y Diseño)  
-**Fecha:** 27 de Enero, 2026  
-**Estado:** 📋 En Planificación
+**Versión:** 1.1 (Desarrollo en curso)  
+**Fecha:** 28 de Enero, 2026  
+**Estado:** � Fase 4: Tesorería (Ajustando Pagos Parciales)
 
 ---
 
@@ -100,7 +100,7 @@ El **Módulo Financiero** es un sistema integral de gestión de ingresos y egres
 
 ## 📦 Submódulos
 
-### 1️⃣ Módulo de Cuotas Mensuales
+### 1️⃣ Módulo de Cuotas Mensuales ✅ (Completado)
 
 #### Descripción
 Sistema de generación y gestión de cuotas mensuales por jugador inscrito en un torneo.
@@ -152,8 +152,9 @@ CREATE TABLE cuotas_jugadores (
     anio INT NOT NULL,
     monto DECIMAL(10,2) NOT NULL,
     fecha_vencimiento DATE NOT NULL,
-    estado ENUM('PENDIENTE', 'PAGADO', 'VENCIDO') DEFAULT 'PENDIENTE',
+    estado ENUM('PENDIENTE', 'PAGADO', 'VENCIDO', 'PARCIAL') DEFAULT 'PENDIENTE',
     fecha_pago DATE NULL,
+    pago_acumulado DECIMAL(10,2) DEFAULT 0,
     id_recibo INT NULL,
     observaciones TEXT,
     fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -167,7 +168,7 @@ CREATE TABLE cuotas_jugadores (
 
 ---
 
-### 2️⃣ Módulo de Sanciones Económicas
+### 2️⃣ Módulo de Sanciones Económicas ✅ (Completado)
 
 #### Descripción
 Sistema de gestión de multas y sanciones económicas aplicadas a jugadores y equipos.
@@ -193,6 +194,8 @@ Sistema de gestión de multas y sanciones económicas aplicadas a jugadores y eq
 **Estados:**
 - `PENDIENTE`: Sanción aplicada, no pagada
 - `PAGADO`: Sanción pagada (vinculada a recibo)
+- `PARCIAL`: Sanción con abonos parciales
+- `ANULADO`: Sanción cancelada por el administrador
 
 #### Tabla de Base de Datos
 
@@ -218,9 +221,10 @@ CREATE TABLE sanciones_economicas (
     id_partido INT NULL,
     concepto VARCHAR(255) NOT NULL,
     monto DECIMAL(10,2) NOT NULL,
-    estado ENUM('PENDIENTE', 'PAGADO', 'ANULADO') DEFAULT 'PENDIENTE',
+    estado ENUM('PENDIENTE', 'PAGADO', 'ANULADO', 'PARCIAL') DEFAULT 'PENDIENTE',
     fecha_sancion DATE NOT NULL,
     fecha_pago DATE NULL,
+    pago_acumulado DECIMAL(10,2) DEFAULT 0,
     id_recibo INT NULL,
     observaciones TEXT,
     fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -234,7 +238,7 @@ CREATE TABLE sanciones_economicas (
 
 ---
 
-### 3️⃣ Módulo de Recibos de Ingreso
+### 3️⃣ Módulo de Recibos de Ingreso 🔄 (En Desarrollo)
 
 #### Descripción
 Sistema de registro y generación de recibos por todos los ingresos del torneo.
@@ -855,29 +859,29 @@ app/
 
 ## 📅 Plan de Implementación
 
-### Fase 1: Infraestructura (Semana 1)
-- [ ] Crear tablas de base de datos
-- [ ] Crear modelos base
-- [ ] Crear controladores base
-- [ ] Configurar permisos
+### Fase 1: Infraestructura (Completado)
+- [x] Crear tablas de base de datos
+- [x] Crear modelos base
+- [x] Crear controladores base
+- [x] Configurar permisos
 
-### Fase 2: Módulo de Cuotas (Semana 2)
-- [ ] Implementar configuración de cuotas
-- [ ] Implementar generación automática
-- [ ] Crear interfaz de gestión
-- [ ] Integrar con inscripción de jugadores
+### Fase 2: Módulo de Cuotas (Completado)
+- [x] Implementar configuración de cuotas
+- [x] Implementar generación automática
+- [x] Crear interfaz de gestión
+- [x] Integrar con inscripción de jugadores
 
-### Fase 3: Módulo de Sanciones (Semana 3)
-- [ ] Implementar configuración de sanciones
-- [ ] Implementar generación automática
-- [ ] Crear interfaz de gestión
-- [ ] Integrar con registro de tarjetas
+### Fase 3: Módulo de Sanciones (Completado)
+- [x] Implementar configuración de sanciones
+- [x] Implementar generación automática
+- [x] Crear interfaz de gestión
+- [x] Integrar con registro de tarjetas
 
-### Fase 4: Módulo de Recibos (Semana 4)
-- [ ] Implementar generación de recibos
-- [ ] Crear plantilla PDF
-- [ ] Crear interfaz de registro de pagos
-- [ ] Integrar con cuotas y sanciones
+### Fase 4: Módulo de Recibos (Completado)
+- [x] Implementar generación de recibos
+- [x] Crear plantilla PDF e Impresión
+- [x] Crear interfaz de registro de pagos
+- [x] Integrar con cuotas y sanciones (Soporte Pagos Parciales)
 
 ### Fase 5: Módulo de Árbitros (Semana 5)
 - [ ] Implementar catálogo de árbitros
@@ -955,6 +959,6 @@ app/
 
 ---
 
-**Última actualización:** 27 de Enero, 2026  
-**Versión del documento:** 1.0  
-**Estado:** 📋 En Planificación
+**Última actualización:** 28 de Enero, 2026  
+**Versión del documento:** 1.1  
+**Estado:** � Fase 4: Tesorería (Ajustando Pagos Parciales)

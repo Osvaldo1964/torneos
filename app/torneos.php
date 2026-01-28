@@ -7,6 +7,12 @@ $data = [
 require_once("template/header.php");
 ?>
 
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb mb-2">
+        <li class="breadcrumb-item"><a href="deportiva.php" class="text-decoration-none">Gestión Deportiva</a></li>
+        <li class="breadcrumb-item active">Torneos</li>
+    </ol>
+</nav>
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h2 class="fw-bold m-0 text-dark">Torneos de la Liga</h2>
     <button class="btn btn-primary px-4 fw-bold shadow-sm" style="border-radius: 12px;" onclick="openModal()">

@@ -176,5 +176,14 @@ class Jugadores extends Controllers
             $this->res(false, "Error al retirar jugador");
         }
     }
+
+    public function listarEquipo($idEquipo)
+    {
+        $idEquipo = intval($idEquipo);
+        if ($idEquipo > 0) {
+            $arrData = $this->model->selectJugadoresEquipo($idEquipo);
+            $this->res(true, "Listado de jugadores del equipo", $arrData);
+        }
+        $this->res(false, "ID de equipo inválido");
+    }
 }
-?>

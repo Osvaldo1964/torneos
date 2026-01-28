@@ -18,4 +18,11 @@ const ENVIRONMENT = 1; // 1: Local, 0: Producción
 // JWT Configuration
 const JWT_SECRET = "globalcup_secret_key_2024";
 const JWT_ALGO = 'HS256';
-?>
+
+// SMTP Configuration (Gmail)
+const SMTP_HOST = "smtp.gmail.com";
+const SMTP_PORT = 587;
+const SMTP_USER = "osvicor1964@gmail.com";
+const SMTP_PASS = "PONER_AQUI_TU_CONTRASEÑA_DE_APLICACION"; // Nota: Usa 'Contraseñas de aplicación' de Google
+const SMTP_FROM = "osvicor1964@gmail.com";
+const SMTP_FROM_NAME = "Global Cup - Tesorería";

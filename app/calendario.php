@@ -7,6 +7,12 @@ $data = [
 require_once("template/header.php");
 ?>
 
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb mb-2">
+        <li class="breadcrumb-item"><a href="deportiva.php" class="text-decoration-none">Gestión Deportiva</a></li>
+        <li class="breadcrumb-item active">Calendario</li>
+    </ol>
+</nav>
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
         <h2 class="fw-bold m-0 text-dark">Estructura del Torneo</h2>
@@ -274,7 +280,7 @@ require_once("template/header.php");
         background-color: #f8f9fa;
     }
 
-    . grupo-chip {
+    .grupo-chip {
         font-size: 0.85rem;
         padding: 5px 12px;
         border-radius: 20px;

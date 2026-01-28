@@ -85,6 +85,11 @@ class Competicion extends Controllers
 
                 // 2. Sincronizar Eventos (Borrar y reinsertar es lo más simple para edición)
                 $this->model->deleteEventosPartido($idPartido);
+                require_once("Models/SancionesModel.php");
+                $sancionesModel = new SancionesModel();
+                $partidoData = $this->model->selectPartido($idPartido);
+                $idTorneo = $partidoData['id_torneo'];
+
                 foreach ($eventos as $ev) {
                     $this->model->insertEvento(
                         $idPartido,
@@ -94,6 +99,17 @@ class Competicion extends Controllers
                         intval($ev['minuto']),
                         $ev['obs'] ?? ''
                     );
+
+                    // Si es tarjeta, generar sanción económica
+                    if ($ev['tipo'] == 'AMARILLA' || $ev['tipo'] == 'ROJA') {
+                        $sancionesModel->generarSancionTarjeta(
+                            $idTorneo,
+                            $idPartido,
+                            intval($ev['id_jugador']),
+                            intval($ev['id_equipo']),
+                            $ev['tipo']
+                        );
+                    }
                 }
 
                 if ($request) {
@@ -283,4 +299,3 @@ class Competicion extends Controllers
         return $fixture;
     }
 }
-?>

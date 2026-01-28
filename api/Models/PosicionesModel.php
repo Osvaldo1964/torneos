@@ -182,10 +182,11 @@ class PosicionesModel extends Mysql
      */
     public function getTorneosPorLiga($idLiga)
     {
-        $sql = "SELECT id_torneo, nombre, categoria, estado, logo
-                FROM torneos 
-                WHERE id_liga = $idLiga
-                ORDER BY fecha_inicio DESC";
+        $sql = "SELECT t.id_torneo, t.nombre, t.categoria, t.estado, t.logo, l.nombre as nombre_liga, l.logo as liga_logo
+                FROM torneos t 
+                INNER JOIN ligas l ON t.id_liga = l.id_liga
+                WHERE t.id_liga = $idLiga
+                ORDER BY t.fecha_inicio DESC";
         return $this->select_all($sql);
     }
 

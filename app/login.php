@@ -68,7 +68,7 @@
     </div>
 
     <script>
-        const base_url = "http://localhost/torneos/api/";
+        const base_url = window.location.origin + window.location.pathname.replace("app/login.php", "api/");
 
         document.getElementById('formLogin').onsubmit = async (e) => {
             e.preventDefault();
@@ -78,8 +78,13 @@
             try {
                 const response = await fetch(base_url + "Login/login", {
                     method: 'POST',
-                    body: JSON.stringify({ email, password }),
-                    headers: { 'Content-Type': 'application/json' }
+                    body: JSON.stringify({
+                        email,
+                        password
+                    }),
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
                 });
                 const result = await response.json();
 

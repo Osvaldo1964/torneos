@@ -108,5 +108,14 @@ class JugadoresModel extends Mysql
         $query = "DELETE FROM equipo_jugadores WHERE id_torneo = ? AND id_equipo = ? AND id_jugador = ?";
         return $this->update($query, [$idTorneo, $idEquipo, $idJugador]);
     }
+
+    public function selectJugadoresEquipo(int $idEquipo)
+    {
+        $sql = "SELECT DISTINCT j.id_jugador, p.nombres, p.apellidos 
+                FROM equipo_jugadores ej
+                INNER JOIN jugadores j ON ej.id_jugador = j.id_jugador
+                INNER JOIN personas p ON j.id_persona = p.id_persona
+                WHERE ej.id_equipo = $idEquipo AND j.estado != 0";
+        return $this->select_all($sql);
+    }
 }
-?>
