@@ -53,6 +53,17 @@ document.addEventListener('DOMContentLoaded', () => {
         "language": app_config.datatables_lang
     });
 
+    // Listener de logo
+    document.getElementById('logo').addEventListener('change', function (e) {
+        if (e.target.files[0]) {
+            let reader = new FileReader();
+            reader.onload = function (ev) {
+                document.getElementById('imgLogo').src = ev.target.result;
+            }
+            reader.readAsDataURL(e.target.files[0]);
+        }
+    });
+
     const formTorneo = document.getElementById('formTorneo');
     formTorneo.onsubmit = async (e) => {
         e.preventDefault();
@@ -95,11 +106,38 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 });
 
+// Función auxiliar para cargar ligas
+async function loadLigasSelect(selectedId = null) {
+    const select = document.getElementById('id_liga');
+    select.innerHTML = '<option value="">Cargando...</option>';
+    try {
+        const result = await fetchAPI('Ligas/getLigas');
+        if (result.status) {
+            let html = '<option value="">Seleccione Liga...</option>';
+            result.data.forEach(l => {
+                let sel = (selectedId && selectedId == l.id_liga) ? 'selected' : '';
+                html += `<option value="${l.id_liga}" ${sel}>${l.nombre}</option>`;
+            });
+            select.innerHTML = html;
+        }
+    } catch (e) { }
+}
+
 function openModal() {
     document.getElementById('formTorneo').reset();
     document.getElementById('idTorneo').value = 0;
     document.getElementById('imgLogo').src = "assets/images/torneos/default_torneo.png";
     document.getElementById('modalTitle').innerText = "Nuevo Torneo";
+
+    // Mostrar select de Liga solo para Super Admin (Rol 1)
+    const userRole = app_config.user.id_rol;
+    if (userRole == 1) {
+        document.getElementById('selectLigaContainer').style.display = 'block';
+        loadLigasSelect();
+    } else {
+        document.getElementById('selectLigaContainer').style.display = 'none';
+    }
+
     new bootstrap.Modal(document.getElementById('modalTorneo')).show();
 }
 
@@ -110,7 +148,10 @@ async function fntEdit(id) {
             const d = result.data;
             document.getElementById('idTorneo').value = d.id_torneo;
             document.getElementById('nombre').value = d.nombre;
-            document.getElementById('imgLogo').src = "assets/images/torneos/" + d.logo;
+
+            let logoSrc = d.logo ? "assets/images/torneos/" + d.logo : "assets/images/torneos/default_torneo.png";
+            document.getElementById('imgLogo').src = logoSrc;
+
             document.getElementById('categoria').value = d.categoria;
             document.getElementById('fecha_inicio').value = d.fecha_inicio;
             document.getElementById('fecha_fin').value = d.fecha_fin;
@@ -119,6 +160,16 @@ async function fntEdit(id) {
             document.getElementById('valor_roja').value = d.valor_roja;
             document.getElementById('valor_arbitraje_base').value = d.valor_arbitraje_base;
             document.getElementById('estado').value = d.estado;
+
+            // Cargar Liga si es Super Admin
+            const userRole = app_config.user.id_rol;
+            if (userRole == 1) {
+                document.getElementById('selectLigaContainer').style.display = 'block';
+                loadLigasSelect(d.id_liga);
+            } else {
+                document.getElementById('selectLigaContainer').style.display = 'none';
+            }
+
             document.getElementById('modalTitle').innerText = "Editar Torneo";
             new bootstrap.Modal(document.getElementById('modalTorneo')).show();
         }

@@ -6,23 +6,38 @@ class JugadoresModel extends Mysql
         parent::__construct();
     }
 
-    public function selectJugadores(int $idLiga)
+    public function selectJugadores(int $idLiga, int $idTorneo = 0, int $idEquipo = 0)
     {
-        // Traemos datos de la persona unidos a su perfil de jugador
-        $sql = "SELECT j.id_jugador, p.id_persona, p.identificacion, p.nombres, p.apellidos, 
+        $join = "";
+        $where = "WHERE j.id_liga = $idLiga AND j.estado != 0";
+
+        if ($idTorneo > 0 && $idEquipo > 0) {
+            $join = "INNER JOIN equipo_jugadores ej ON j.id_jugador = ej.id_jugador";
+            $where .= " AND ej.id_torneo = $idTorneo AND ej.id_equipo = $idEquipo";
+        } elseif ($idEquipo > 0) {
+            $join = "INNER JOIN equipo_jugadores ej ON j.id_jugador = ej.id_jugador";
+            $where .= " AND ej.id_equipo = $idEquipo";
+        }
+
+        $sql = "SELECT DISTINCT j.id_jugador, p.id_persona, p.identificacion, p.nombres, p.apellidos, 
                        j.foto, p.telefono, p.email, j.fecha_nacimiento, j.posicion, j.estado 
                 FROM jugadores j
                 INNER JOIN personas p ON j.id_persona = p.id_persona
-                WHERE j.id_liga = $idLiga AND j.estado != 0";
+                $join
+                $where";
         return $this->select_all($sql);
     }
 
-    public function selectJugador(int $idJugador, int $idLiga)
+    public function selectJugador(int $idJugador, int $idLiga = 0)
     {
+        $where = "WHERE j.id_jugador = $idJugador";
+        if ($idLiga > 0)
+            $where .= " AND j.id_liga = $idLiga";
+
         $sql = "SELECT j.*, p.identificacion, p.nombres, p.apellidos, p.email, p.telefono 
                 FROM jugadores j
                 INNER JOIN personas p ON j.id_persona = p.id_persona
-                WHERE j.id_jugador = $idJugador AND j.id_liga = $idLiga";
+                $where";
         return $this->select($sql);
     }
 

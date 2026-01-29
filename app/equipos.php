@@ -14,10 +14,24 @@ require_once("template/header.php");
     </ol>
 </nav>
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2 class="fw-bold m-0 text-dark">Equipos de la Liga</h2>
-    <button class="btn btn-primary px-4 fw-bold shadow-sm" style="border-radius: 12px;" onclick="openModal()">
-        <i class="fa-solid fa-plus me-2"></i> Nuevo Equipo
-    </button>
+    <div class="d-flex flex-column flex-md-row align-items-md-center gap-3">
+        <h2 class="fw-bold m-0 text-dark">Equipos</h2>
+        <div class="d-flex gap-2">
+            <select class="form-select form-select-sm shadow-sm border-0 d-none" id="filterLiga"
+                style="min-width: 150px;">
+                <option value="">Todas las Ligas</option>
+            </select>
+            <select class="form-select form-select-sm shadow-sm border-0 d-none" id="filterTorneo"
+                style="min-width: 150px;">
+                <option value="">Todos los Torneos</option>
+            </select>
+        </div>
+    </div>
+    <div id="btnNewContainer">
+        <button class="btn btn-primary px-4 fw-bold shadow-sm" style="border-radius: 12px;" onclick="openModal()">
+            <i class="fa-solid fa-plus me-2"></i> Nuevo Equipo
+        </button>
+    </div>
 </div>
 
 <div class="card p-4">
@@ -57,6 +71,22 @@ require_once("template/header.php");
                         <input type="file" class="form-control" id="escudo" name="escudo" accept="image/*"
                             style="border-radius: 10px;">
                         <label class="form-label text-muted small d-block mt-1">Escudo del Equipo</label>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3" id="modalLigaContainer" style="display:none;">
+                            <label class="form-label text-muted small fw-bold">Liga</label>
+                            <select class="form-select" id="modalIdLiga" name="id_liga" style="border-radius: 10px;">
+                                <option value="">Seleccione Liga...</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3" id="modalTorneoContainer">
+                            <label class="form-label text-muted small fw-bold">Torneo de Inscripción</label>
+                            <select class="form-select" id="modalIdTorneo" name="id_torneo"
+                                style="border-radius: 10px;">
+                                <option value="">Seleccione Torneo...</option>
+                            </select>
+                        </div>
                     </div>
 
                     <div class="mb-3">

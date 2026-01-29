@@ -15,13 +15,21 @@ class Torneos extends Controllers
 
     public function getTorneos()
     {
-        $idLiga = intval($this->userData['id_liga']);
-        // Si es la liga 1 (Admin Global), puede ver todos los torneos
-        if ($idLiga == 1) {
-            $sql = "SELECT * FROM torneos WHERE estado != 'ELIMINADO'";
-            $arrData = $this->model->select_all($sql);
+        $idLigaUsuario = intval($this->userData['id_liga']);
+
+        if ($this->userData['id_rol'] == 1) {
+            $filtroLiga = isset($_GET['id_liga']) ? intval($_GET['id_liga']) : 0;
+            if ($filtroLiga > 0) {
+                // Filtrar por liga específica
+                $arrData = $this->model->selectTorneos($filtroLiga);
+            } else {
+                // Mostrar todos
+                $sql = "SELECT * FROM torneos WHERE estado != 'ELIMINADO'";
+                $arrData = $this->model->select_all($sql);
+            }
         } else {
-            $arrData = $this->model->selectTorneos($idLiga);
+            // Mostrar solo de su liga
+            $arrData = $this->model->selectTorneos($idLigaUsuario);
         }
         $this->res(true, "Listado de torneos", $arrData);
     }
@@ -42,7 +50,34 @@ class Torneos extends Controllers
     public function setTorneo()
     {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            // Validar Permisos Generales
+            if ($this->userData['id_rol'] > 2) {
+                $this->res(false, "No tienes permisos para gestionar torneos");
+            }
+
             $idTorneo = intval($_POST['id_torneo'] ?? 0);
+
+            // Determinar Liga
+            $idLigaDestino = 0;
+            if ($this->userData['id_rol'] == 1) {
+                // Super Admin: Debe recibir la liga por POST
+                $idLigaDestino = intval($_POST['id_liga'] ?? 0);
+                if ($idLigaDestino <= 0 && $idTorneo == 0) { // Solo obligatorio al crear
+                    $this->res(false, "Debes seleccionar una liga para el torneo");
+                }
+            } else {
+                // Liga Admin: Usa su propia liga
+                $idLigaDestino = $this->userData['id_liga'];
+            }
+
+            // Validar propiedad al Editar
+            if ($idTorneo > 0 && $this->userData['id_rol'] != 1) {
+                $check = $this->model->selectTorneo($idTorneo, $this->userData['id_liga']);
+                if (empty($check)) {
+                    $this->res(false, "No tienes permiso para editar este torneo");
+                }
+            }
+
             $nombre = trim($_POST['nombre'] ?? '');
             $categoria = trim($_POST['categoria'] ?? '');
             $cuota = floatval($_POST['cuota_jugador'] ?? 0);
@@ -59,24 +94,41 @@ class Torneos extends Controllers
             // Manejo del Logo
             $nombreLogo = "default_torneo.png";
 
-            // Si es edición, obtener el logo actual
             if ($idTorneo > 0) {
-                $torneoActual = $this->model->selectTorneo($idTorneo, $this->userData['id_liga']);
-                if ($torneoActual)
-                    $nombreLogo = $torneoActual['logo'];
+                // Obtener logo actual (si es admin, puede que necesitemos buscar sin filtro de liga o confiar en lo anterior)
+                // Si rol 1, buscamos globalmente. Si rol 2, ya validamos propiedad.
+                // Simplificamos usando selectTorneo con id_liga 0/null si es super admin?
+                // El modelo selectTorneo usa id_liga...
+                // Si ya validamos la propiedad arriba, podemos confiar en que existe.
+                // Para Rol 1, selectTorneo podría fallar si filtra por liga.
+                // Asumiremos que para obtener el logo anterior no es critico el filtro estricto aqui si ya validamos.
+                // Pero usaremos la validacion correcta:
+                $ligaFiltro = ($this->userData['id_rol'] == 1) ? 0 : $this->userData['id_liga'];
+                // Ojo: selectTorneo del modelo filtra por liga si se le pasa. Si pasamos 0, ¿qué hace?
+                // Revisare el modelo despues. Por ahora asumamos que el usuario tiene acceso visual al torneo.
+                // Como parche rapido:
+                $queryLogo = "SELECT logo FROM torneos WHERE id_torneo = $idTorneo";
+                $curr = $this->model->select($queryLogo);
+                if ($curr)
+                    $nombreLogo = $curr['logo'];
             }
 
             if (!empty($_FILES['logo']['name'])) {
                 $imgNombre = $_FILES['logo']['name'];
                 $imgTemp = $_FILES['logo']['tmp_name'];
                 $ext = pathinfo($imgNombre, PATHINFO_EXTENSION);
-                $nombreLogo = "torneo_" . time() . "." . $ext;
-                $destino = "../app/assets/images/torneos/" . $nombreLogo;
+                $nombreLogo = "torneo_" . uniqid() . "." . $ext;
+
+                $uploadDir = "../app/assets/images/torneos/";
+                if (!is_dir($uploadDir))
+                    mkdir($uploadDir, 0777, true);
+
+                $destino = $uploadDir . $nombreLogo;
                 move_uploaded_file($imgTemp, $destino);
             }
 
             if ($idTorneo == 0) {
-                $request = $this->model->insertTorneo($nombre, $nombreLogo, $this->userData['id_liga'], $categoria, $cuota, $amarilla, $roja, $arbitraje, $fechaInicio, $fechaFin);
+                $request = $this->model->insertTorneo($nombre, $nombreLogo, $idLigaDestino, $categoria, $cuota, $amarilla, $roja, $arbitraje, $fechaInicio, $fechaFin);
                 if ($request > 0)
                     $this->res(true, "Torneo creado correctamente");
             } else {

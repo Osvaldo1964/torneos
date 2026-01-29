@@ -16,7 +16,17 @@ class Equipos extends Controllers
     public function getEquipos()
     {
         $idDelegado = ($this->userData['id_rol'] == 3) ? $this->userData['id_user'] : 0;
-        $arrData = $this->model->selectEquipos($this->userData['id_liga'], $idDelegado);
+
+        $idLiga = 0;
+        if ($this->userData['id_rol'] == 1) {
+            $idLiga = isset($_GET['id_liga']) ? intval($_GET['id_liga']) : 0;
+        } else {
+            $idLiga = intval($this->userData['id_liga']);
+        }
+
+        $idTorneo = isset($_GET['id_torneo']) ? intval($_GET['id_torneo']) : 0;
+
+        $arrData = $this->model->selectEquipos($idLiga, $idDelegado, $idTorneo);
         $this->res(true, "Listado de equipos", $arrData);
     }
 
@@ -24,7 +34,8 @@ class Equipos extends Controllers
     {
         $idEquipo = intval($id);
         if ($idEquipo > 0) {
-            $arrData = $this->model->selectEquipo($idEquipo, $this->userData['id_liga']);
+            $idLigaUsuario = ($this->userData['id_rol'] == 1) ? 0 : $this->userData['id_liga'];
+            $arrData = $this->model->selectEquipo($idEquipo, $idLigaUsuario);
             if (empty($arrData)) {
                 $this->res(false, "Equipo no encontrado");
             }
@@ -35,7 +46,20 @@ class Equipos extends Controllers
 
     public function getDelegados()
     {
-        $arrData = $this->model->selectDelegados($this->userData['id_liga']);
+        // Si Rol 1, deberia poder ver delegados de la liga seleccionada... pero este metodo usa userData.
+        // Asumiremos que al crear equipo el super admin vera delegados de la liga que haya seleccionado.
+        // Este endpoint requiere id_liga por GET si es Rol 1?
+        // Por simplicidad mantengo userData, pero Rol 1 podria tener problemas si id_liga user no coincide.
+        // Lo ideal sería recibir id_liga. 
+        // Parche rápido:
+        $idLiga = $this->userData['id_liga'];
+        if ($this->userData['id_rol'] == 1)
+            $idLiga = intval($_GET['id_liga'] ?? 0);
+
+        $arrData = [];
+        if ($idLiga > 0)
+            $arrData = $this->model->selectDelegados($idLiga);
+
         $this->res(true, "Lista de delegados", $arrData);
     }
 
@@ -49,6 +73,20 @@ class Equipos extends Controllers
             $nombre = trim($_POST['nombre'] ?? '');
             $idDelegado = intval($_POST['id_delegado'] ?? 0);
             $estado = intval($_POST['estado'] ?? 1);
+            $idTorneo = intval($_POST['id_torneo'] ?? 0);
+
+            if ($idEquipo == 0 && $idTorneo <= 0) {
+                $this->res(false, "Debes seleccionar un torneo para crear el equipo");
+            }
+
+            // Determinar Liga
+            $idLiga = intval($this->userData['id_liga']);
+            if ($this->userData['id_rol'] == 1) {
+                $idLiga = intval($_POST['id_liga'] ?? 0);
+                if ($idLiga <= 0 && $idEquipo == 0) { // Liga obligatoria al crear
+                    $this->res(false, "Debes seleccionar una liga");
+                }
+            }
 
             if (empty($nombre))
                 $this->res(false, "El nombre del equipo es obligatorio");
@@ -57,7 +95,8 @@ class Equipos extends Controllers
             $nombreEscudo = "default_shield.png";
 
             if ($idEquipo > 0) {
-                $equipoActual = $this->model->selectEquipo($idEquipo, $this->userData['id_liga']);
+                $ligaCheck = ($this->userData['id_rol'] == 1) ? 0 : $idLiga;
+                $equipoActual = $this->model->selectEquipo($idEquipo, $ligaCheck);
                 if ($equipoActual)
                     $nombreEscudo = $equipoActual['escudo'];
             }
@@ -66,16 +105,18 @@ class Equipos extends Controllers
                 $imgNombre = $_FILES['escudo']['name'];
                 $imgTemp = $_FILES['escudo']['tmp_name'];
                 $ext = pathinfo($imgNombre, PATHINFO_EXTENSION);
-                $nombreEscudo = "equipo_" . time() . "." . $ext;
+                $nombreEscudo = "equipo_" . uniqid() . "." . $ext;
                 $destino = "../app/assets/images/equipos/" . $nombreEscudo;
 
-                if (move_uploaded_file($imgTemp, $destino)) {
-                    // Opcional: eliminar el anterior si no es el default
-                }
+                $uploadDir = "../app/assets/images/equipos/";
+                if (!is_dir($uploadDir))
+                    mkdir($uploadDir, 0777, true);
+
+                move_uploaded_file($imgTemp, $destino);
             }
 
             if ($idEquipo == 0) {
-                $request = $this->model->insertEquipo($nombre, $nombreEscudo, $idDelegado, $this->userData['id_liga'], $estado);
+                $request = $this->model->insertEquipo($nombre, $nombreEscudo, $idDelegado, $idLiga, $estado, $idTorneo);
                 if ($request > 0)
                     $this->res(true, "Equipo creado correctamente");
             } else {

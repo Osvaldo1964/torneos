@@ -62,23 +62,31 @@ document.addEventListener('DOMContentLoaded', () => {
         "order": [[0, "asc"]]
     });
 
+    // Preview de imagen
+    const inputFile = document.getElementById('logo');
+    inputFile.addEventListener('change', function (e) {
+        if (e.target.files[0]) {
+            let reader = new FileReader();
+            reader.onload = function (ev) {
+                document.getElementById('imgPreview').src = ev.target.result;
+            }
+            reader.readAsDataURL(e.target.files[0]);
+        }
+    });
+
     const formLiga = document.getElementById('formLiga');
     formLiga.onsubmit = async (e) => {
         e.preventDefault();
-        const formData = {
-            id_liga: document.getElementById('idLiga').value,
-            nombre: document.getElementById('nombre').value,
-            estado: document.getElementById('estado').value
-        };
+        const formData = new FormData(formLiga);
 
         try {
             const response = await fetch(api_url + "Ligas/setLiga", {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
+                    // 'Content-Type': 'multipart/form-data', // No poner esto manualmente con fetch+FormData
                     'Authorization': 'Bearer ' + token
                 },
-                body: JSON.stringify(formData)
+                body: formData
             });
             const result = await response.json();
 
@@ -98,6 +106,7 @@ document.addEventListener('DOMContentLoaded', () => {
 function openModal() {
     document.getElementById('formLiga').reset();
     document.getElementById('idLiga').value = 0;
+    document.getElementById('imgPreview').src = "assets/images/logos/default_logo.png";
     document.getElementById('modalTitle').innerText = "Crear Nueva Liga";
     new bootstrap.Modal(document.getElementById('modalLiga')).show();
 }
@@ -113,6 +122,11 @@ async function fntEdit(id) {
             document.getElementById('idLiga').value = d.id_liga;
             document.getElementById('nombre').value = d.nombre;
             document.getElementById('estado').value = d.estado;
+
+            // Cargar preview del logo si existe, o default
+            let logoSrc = d.logo ? "assets/images/logos/" + d.logo : "assets/images/logos/default_logo.png";
+            document.getElementById('imgPreview').src = logoSrc;
+
             document.getElementById('modalTitle').innerText = "Configurar Liga: " + d.nombre;
             new bootstrap.Modal(document.getElementById('modalLiga')).show();
         }

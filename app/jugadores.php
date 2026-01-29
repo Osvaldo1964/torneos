@@ -14,7 +14,23 @@ require_once("template/header.php");
     </ol>
 </nav>
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2 class="fw-bold m-0 text-dark">Base de Jugadores</h2>
+    <div class="d-flex flex-column flex-md-row align-items-md-center gap-3">
+        <h2 class="fw-bold m-0 text-dark">Base de Jugadores</h2>
+        <div class="d-flex gap-2 flex-wrap">
+            <select class="form-select form-select-sm shadow-sm border-0 d-none" id="filterLiga"
+                style="min-width: 140px;">
+                <option value="">Ligas...</option>
+            </select>
+            <select class="form-select form-select-sm shadow-sm border-0 d-none" id="filterTorneo"
+                style="min-width: 140px;">
+                <option value="">Torneos...</option>
+            </select>
+            <select class="form-select form-select-sm shadow-sm border-0 d-none" id="filterEquipo"
+                style="min-width: 140px;">
+                <option value="">Equipos...</option>
+            </select>
+        </div>
+    </div>
     <button class="btn btn-primary px-4 fw-bold shadow-sm" style="border-radius: 12px;" onclick="openModal()">
         <i class="fa-solid fa-user-plus me-2"></i> Nuevo Jugador
     </button>

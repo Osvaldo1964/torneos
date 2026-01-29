@@ -64,6 +64,12 @@ require_once("template/header.php");
                         </div>
                     </div>
                     <div class="row">
+                        <div class="col-md-12 mb-3" id="selectLigaContainer" style="display:none;">
+                            <label class="form-label text-muted small fw-bold">Asignar Liga</label>
+                            <select class="form-select" id="id_liga" name="id_liga" style="border-radius: 10px;">
+                                <option value="">Seleccione Liga...</option>
+                            </select>
+                        </div>
                         <div class="col-md-8 mb-3">
                             <label class="form-label text-muted small fw-bold">Nombre del Torneo</label>
                             <input type="text" class="form-control" id="nombre" name="nombre" required

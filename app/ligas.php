@@ -48,12 +48,23 @@ require_once("template/header.php");
             </div>
             <form id="formLiga">
                 <div class="modal-body p-4">
-                    <input type="hidden" id="idLiga" name="idLiga" value="0">
+                    <input type="hidden" id="idLiga" name="id_liga" value="0">
                     <div class="row">
                         <div class="col-md-12 mb-3">
                             <label class="form-label text-muted small fw-bold">Nombre de la Liga</label>
                             <input type="text" class="form-control" id="nombre" name="nombre" required
                                 style="border-radius: 10px;">
+                        </div>
+                        <div class="col-md-12 mb-3">
+                            <label class="form-label text-muted small fw-bold">Logo de la Liga</label>
+                            <div class="d-flex align-items-center">
+                                <input type="file" class="form-control me-3" id="logo" name="logo" accept="image/*"
+                                    style="border-radius: 10px;">
+                                <img id="imgPreview" src="assets/images/logos/default_logo.png"
+                                    class="rounded-circle border p-1"
+                                    style="width: 50px; height: 50px; object-fit: cover;">
+                            </div>
+                            <small class="text-muted" style="font-size: 11px;">Formatos: JPG, PNG. Máx 2MB.</small>
                         </div>
                         <div class="col-md-12 mb-0">
                             <label class="form-label text-muted small fw-bold">Estado</label>

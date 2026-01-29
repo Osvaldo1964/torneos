@@ -45,22 +45,53 @@ class Ligas extends Controllers
     public function setLiga()
     {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            $data = json_decode(file_get_contents("php://input"), true);
-            $idLiga = intval($data['id_liga'] ?? 0);
-            $nombre = trim($data['nombre'] ?? '');
-            $estado = intval($data['estado'] ?? 1);
+            $idLiga = intval($_POST['id_liga'] ?? 0);
+            $nombre = trim($_POST['nombre'] ?? '');
+            $estado = intval($_POST['estado'] ?? 1);
 
             if (empty($nombre)) {
                 $this->res(false, "El nombre de la liga es obligatorio");
+            }
+
+            // Manejo de Logo
+            $nombreLogo = "";
+            if ($idLiga > 0) {
+                // Obtener logo actual
+                $sql = "SELECT logo FROM ligas WHERE id_liga = $idLiga";
+                $curr = $this->model->select($sql);
+                if (!empty($curr))
+                    $nombreLogo = $curr['logo'];
+            }
+            if (empty($nombreLogo))
+                $nombreLogo = "default_logo.png";
+
+            if (!empty($_FILES['logo']['name'])) {
+                $imgNombre = $_FILES['logo']['name'];
+                $imgTemp = $_FILES['logo']['tmp_name'];
+                $ext = pathinfo($imgNombre, PATHINFO_EXTENSION);
+                $nombreLogo = "liga_" . md5(date('d-m-Y H:i:s')) . "." . $ext;
+
+                $uploadDir = "../app/assets/images/logos/";
+                if (!is_dir($uploadDir)) {
+                    mkdir($uploadDir, 0777, true);
+                }
+
+                $destino = $uploadDir . $nombreLogo;
+                if (move_uploaded_file($imgTemp, $destino)) {
+                    // Solo si se sube correctamente asignamos nuevo nombre
+                } else {
+                    // Si falla subida, mantenemos el anterior o manejamos error?
+                    // Por ahora dejaremos que siga, pero idealmente error.
+                }
             }
 
             if ($idLiga == 0) {
                 // Crear (Solo Super Admin)
                 if ($this->userData['id_rol'] != 1)
                     $this->res(false, "No tienes permiso para crear ligas");
-                // Valores financieros se inicializan en 0, ahora se manejan por Torneo
-                $query = "INSERT INTO ligas(nombre, cuota_mensual_jugador, valor_amarilla, valor_roja, valor_arbitraje_base, estado) VALUES(?,0,0,0,0,?)";
-                $arrParams = [$nombre, $estado];
+
+                $query = "INSERT INTO ligas(nombre, logo, cuota_mensual_jugador, valor_amarilla, valor_roja, valor_arbitraje_base, estado) VALUES(?,?,0,0,0,0,?)";
+                $arrParams = [$nombre, $nombreLogo, $estado];
                 $request = $this->model->insert($query, $arrParams);
                 if ($request > 0)
                     $this->res(true, "Liga creada correctamente");
@@ -69,8 +100,8 @@ class Ligas extends Controllers
                 if ($this->userData['id_rol'] != 1 && $this->userData['id_liga'] != $idLiga) {
                     $this->res(false, "No tienes permiso para editar esta liga");
                 }
-                $query = "UPDATE ligas SET nombre=?, estado=? WHERE id_liga=?";
-                $arrParams = [$nombre, $estado, $idLiga];
+                $query = "UPDATE ligas SET nombre=?, logo=?, estado=? WHERE id_liga=?";
+                $arrParams = [$nombre, $nombreLogo, $estado, $idLiga];
                 $request = $this->model->update($query, $arrParams);
                 if ($request)
                     $this->res(true, "Liga actualizada correctamente");

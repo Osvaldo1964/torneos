@@ -15,7 +15,36 @@ class Jugadores extends Controllers
 
     public function getJugadores()
     {
-        $arrData = $this->model->selectJugadores($this->userData['id_liga']);
+        $idLiga = 0;
+        $idTorneo = intval($_GET['id_torneo'] ?? 0);
+        $idEquipo = intval($_GET['id_equipo'] ?? 0);
+
+        if ($this->userData['id_rol'] == 1) {
+            $idLiga = isset($_GET['id_liga']) ? intval($_GET['id_liga']) : 0;
+        } else {
+            $idLiga = intval($this->userData['id_liga']);
+            // Validación Delegado
+            if ($this->userData['id_rol'] == 3 && $idEquipo > 0) {
+                if (!$this->model->isEquipoDeDelegado($idEquipo, $this->userData['id_user'])) {
+                    // Si intenta acceder a equipo ajeno, retornamos vacio o error.
+                    // Retornamos vacio para no romper DataTables
+                    $this->res(true, "Acceso no autorizado a este equipo", []);
+                    return;
+                }
+            }
+        }
+
+        $arrData = $this->model->selectJugadores($idLiga, $idTorneo, $idEquipo);
+
+        // Filtro para Jugador (Rol 4) - Solo ver su registro
+        if ($this->userData['id_rol'] == 4) {
+            $myIdPersona = $this->userData['id_user'];
+            $arrData = array_filter($arrData, function ($j) use ($myIdPersona) {
+                return $j['id_persona'] == $myIdPersona;
+            });
+            $arrData = array_values($arrData);
+        }
+
         $this->res(true, "Listado de jugadores", $arrData);
     }
 
@@ -23,10 +52,21 @@ class Jugadores extends Controllers
     {
         $idJugador = intval($id);
         if ($idJugador > 0) {
-            $arrData = $this->model->selectJugador($idJugador, $this->userData['id_liga']);
+            $idLigaUser = ($this->userData['id_rol'] == 1) ? 0 : $this->userData['id_liga'];
+
+            $arrData = $this->model->selectJugador($idJugador, $idLigaUser);
             if (empty($arrData)) {
                 $this->res(false, "Jugador no encontrado");
             }
+
+            // Seguridad Rol 4
+            if ($this->userData['id_rol'] == 4) {
+                if ($arrData['id_persona'] != $this->userData['id_user']) {
+                    $this->res(false, "Acceso restringido");
+                    return;
+                }
+            }
+
             $this->res(true, "Datos del jugador", $arrData);
         }
         $this->res(false, "ID inválido");

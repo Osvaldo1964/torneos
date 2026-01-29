@@ -7,6 +7,10 @@ document.addEventListener('DOMContentLoaded', () => {
         "ajax": {
             "url": api_url + "Equipos/getEquipos",
             "headers": { "Authorization": "Bearer " + token },
+            "data": function (d) {
+                d.id_liga = document.getElementById('filterLiga') ? document.getElementById('filterLiga').value : '';
+                d.id_torneo = document.getElementById('filterTorneo') ? document.getElementById('filterTorneo').value : '';
+            },
             "dataSrc": "data"
         },
         "columns": [
@@ -42,22 +46,48 @@ document.addEventListener('DOMContentLoaded', () => {
         "language": app_config.datatables_lang
     });
 
+    // Lógica de Filtros
+    const userRole = app_config.user.id_rol;
+    const filterLiga = document.getElementById('filterLiga');
+    const filterTorneo = document.getElementById('filterTorneo');
+
+    if (userRole == 1) { // Super Admin
+        filterLiga.classList.remove('d-none');
+        filterTorneo.classList.remove('d-none');
+        loadLigasGeneric('filterLiga');
+
+        filterLiga.addEventListener('change', function () {
+            loadTorneosGeneric('filterTorneo', this.value);
+            tableEquipos.ajax.reload();
+        });
+    } else if (userRole == 2) { // Liga Admin
+        filterTorneo.classList.remove('d-none');
+        loadTorneosGeneric('filterTorneo');
+    }
+
+    filterTorneo.addEventListener('change', function () {
+        tableEquipos.ajax.reload();
+    });
+
     fntLoadDelegados();
+
+    const escudoInput = document.getElementById('escudo');
+    if (escudoInput) {
+        escudoInput.addEventListener('change', function (e) {
+            if (e.target.files[0]) {
+                let reader = new FileReader();
+                reader.onload = function (ev) {
+                    document.getElementById('imgEscudo').src = ev.target.result;
+                }
+                reader.readAsDataURL(e.target.files[0]);
+            }
+        });
+    }
 
     const formEquipo = document.getElementById('formEquipo');
     formEquipo.onsubmit = async (e) => {
         e.preventDefault();
-
-        const formData = new FormData();
-        formData.append('id_equipo', document.getElementById('idEquipo').value);
-        formData.append('nombre', document.getElementById('nombre').value);
-        formData.append('id_delegado', document.getElementById('id_delegado').value);
-        formData.append('estado', document.getElementById('estado').value);
-
-        const escudoFile = document.getElementById('escudo').files[0];
-        if (escudoFile) {
-            formData.append('escudo', escudoFile);
-        }
+        const formData = new FormData(formEquipo);
 
         try {
             const response = await fetch(api_url + "Equipos/setEquipo", {
@@ -87,9 +117,11 @@ async function fntLoadDelegados() {
         });
         const result = await response.json();
         let html = '<option value="">Seleccione Delegado</option>';
-        result.data.forEach(d => {
-            html += `<option value="${d.id_persona}">${d.nombres} ${d.apellidos}</option>`;
-        });
+        if (result.status) {
+            result.data.forEach(d => {
+                html += `<option value="${d.id_persona}">${d.nombres} ${d.apellidos}</option>`;
+            });
+        }
         document.getElementById('id_delegado').innerHTML = html;
     } catch (error) { }
 }
@@ -99,6 +131,32 @@ function openModal() {
     document.getElementById('idEquipo').value = 0;
     document.getElementById('imgEscudo').src = "assets/images/equipos/default_shield.png";
     document.getElementById('modalTitle').innerText = "Nuevo Equipo";
+
+    // Mostrar/Ocultar selects según rol y contexto
+    const role = app_config.user.id_rol;
+    const modalLigaC = document.getElementById('modalLigaContainer');
+    const modalTorneoC = document.getElementById('modalTorneoContainer');
+    const modalTorneo = document.getElementById('modalIdTorneo');
+
+    if (modalTorneoC) modalTorneoC.style.display = 'block';
+    if (modalTorneo) modalTorneo.required = true;
+
+    if (role == 1) {
+        if (modalLigaC) modalLigaC.style.display = 'block';
+        loadLigasGeneric('modalIdLiga');
+        if (modalTorneo) modalTorneo.innerHTML = '<option value="">Seleccione Liga primero...</option>';
+
+        const ml = document.getElementById('modalIdLiga');
+        if (ml) {
+            ml.onchange = function () {
+                loadTorneosGeneric('modalIdTorneo', this.value);
+            };
+        }
+    } else {
+        if (modalLigaC) modalLigaC.style.display = 'none';
+        if (role == 2) loadTorneosGeneric('modalIdTorneo');
+    }
+
     new bootstrap.Modal(document.getElementById('modalEquipo')).show();
 }
 
@@ -115,6 +173,12 @@ async function fntEdit(id) {
             document.getElementById('id_delegado').value = d.id_delegado;
             document.getElementById('estado').value = d.estado;
             document.getElementById('imgEscudo').src = "assets/images/equipos/" + d.escudo;
+
+            // Al editar, ocultamos la asignación de liga/torneo
+            if (document.getElementById('modalLigaContainer')) document.getElementById('modalLigaContainer').style.display = 'none';
+            if (document.getElementById('modalTorneoContainer')) document.getElementById('modalTorneoContainer').style.display = 'none';
+            if (document.getElementById('modalIdTorneo')) document.getElementById('modalIdTorneo').required = false;
+
             document.getElementById('modalTitle').innerText = "Editar Equipo";
             new bootstrap.Modal(document.getElementById('modalEquipo')).show();
         }
@@ -130,19 +194,66 @@ function fntDel(id) {
         confirmButtonText: "Sí, eliminar"
     }).then(async (result) => {
         if (result.isConfirmed) {
-            const response = await fetch(api_url + "Equipos/delEquipo", {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': 'Bearer ' + token
-                },
-                body: JSON.stringify({ id_equipo: id })
-            });
-            const res = await response.json();
-            if (res.status) {
-                Swal.fire("Eliminado", res.msg, "success");
-                tableEquipos.ajax.reload();
+            try {
+                const response = await fetch(api_url + "Equipos/delEquipo", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + token
+                    },
+                    body: JSON.stringify({ id_equipo: id })
+                });
+                const res = await response.json();
+                if (res.status) {
+                    Swal.fire("Eliminado", res.msg, "success");
+                    tableEquipos.ajax.reload();
+                } else {
+                    Swal.fire("Error", res.msg, "error");
+                }
+            } catch (e) {
+                Swal.fire("Error", "No se pudo eliminar", "error");
             }
         }
     });
+}
+
+// Funciones Genéricas de Carga
+async function loadLigasGeneric(targetId, selectedId = null) {
+    try {
+        const response = await fetch(api_url + "Ligas/getLigas", { headers: { "Authorization": "Bearer " + token } });
+        const result = await response.json();
+        if (result.status) {
+            let html = '<option value="">Seleccione Liga...</option>';
+            result.data.forEach(l => {
+                let sel = (selectedId == l.id_liga) ? 'selected' : '';
+                html += `<option value="${l.id_liga}" ${sel}>${l.nombre}</option>`;
+            });
+            const selEl = document.getElementById(targetId);
+            if (selEl) selEl.innerHTML = html;
+        }
+    } catch (e) { }
+}
+
+async function loadTorneosGeneric(targetId, idLiga = null, selectedId = null) {
+    const sel = document.getElementById(targetId);
+    if (!sel) return;
+
+    sel.innerHTML = '<option value="">Cargando...</option>';
+
+    let url = api_url + 'Torneos/getTorneos';
+    if (idLiga) url += '?id_liga=' + idLiga;
+
+    try {
+        const response = await fetch(url, { headers: { "Authorization": "Bearer " + token } });
+        const result = await response.json();
+
+        let html = '<option value="">Seleccione Torneo...</option>';
+        if (result.status) {
+            result.data.forEach(t => {
+                let s = (selectedId == t.id_torneo) ? 'selected' : '';
+                html += `<option value="${t.id_torneo}" ${s}>${t.nombre}</option>`;
+            });
+        }
+        sel.innerHTML = html;
+    } catch (e) { sel.innerHTML = '<option value="">Sin torneos</option>'; }
 }
