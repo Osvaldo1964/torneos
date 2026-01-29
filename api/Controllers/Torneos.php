@@ -109,7 +109,8 @@ class Torneos extends Controllers
     // --- Métodos de Inscripción ---
     public function getInscritos($idTorneo)
     {
-        $arrData = $this->model->selectInscritos(intval($idTorneo));
+        $idDelegado = ($this->userData['id_rol'] == 3) ? $this->userData['id_user'] : 0;
+        $arrData = $this->model->selectInscritos(intval($idTorneo), $idDelegado);
         $this->res(true, "Equipos inscritos", $arrData);
     }
 

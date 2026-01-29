@@ -38,21 +38,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             },
             {
-                "data": "cuota_mensual_jugador",
-                "className": "text-center",
-                "render": function (data) { return "$ " + parseFloat(data).toLocaleString(); }
-            },
-            {
-                "data": null,
-                "className": "text-center",
-                "render": function (data) {
-                    return `
-                        <span class="badge bg-warning-subtle text-warning border border-warning-subtle px-2">A: $${parseFloat(data.valor_amarilla).toLocaleString()}</span>
-                        <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2">R: $${parseFloat(data.valor_roja).toLocaleString()}</span>
-                    `;
-                }
-            },
-            {
                 "data": "estado",
                 "render": function (data) {
                     return data == 1
@@ -62,6 +47,7 @@ document.addEventListener('DOMContentLoaded', () => {
             },
             {
                 "data": null,
+                "className": "text-center",
                 "render": function (data) {
                     return `
                         <div class="text-center">
@@ -82,10 +68,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const formData = {
             id_liga: document.getElementById('idLiga').value,
             nombre: document.getElementById('nombre').value,
-            cuota_mensual_jugador: document.getElementById('cuota_mensual_jugador').value,
-            valor_arbitraje_base: document.getElementById('valor_arbitraje_base').value,
-            valor_amarilla: document.getElementById('valor_amarilla').value,
-            valor_roja: document.getElementById('valor_roja').value,
             estado: document.getElementById('estado').value
         };
 
@@ -130,10 +112,6 @@ async function fntEdit(id) {
             const d = result.data;
             document.getElementById('idLiga').value = d.id_liga;
             document.getElementById('nombre').value = d.nombre;
-            document.getElementById('cuota_mensual_jugador').value = d.cuota_mensual_jugador;
-            document.getElementById('valor_arbitraje_base').value = d.valor_arbitraje_base;
-            document.getElementById('valor_amarilla').value = d.valor_amarilla;
-            document.getElementById('valor_roja').value = d.valor_roja;
             document.getElementById('estado').value = d.estado;
             document.getElementById('modalTitle').innerText = "Configurar Liga: " + d.nombre;
             new bootstrap.Modal(document.getElementById('modalLiga')).show();

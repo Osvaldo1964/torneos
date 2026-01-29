@@ -6,6 +6,25 @@ class Sanciones extends Controllers
     public function __construct()
     {
         parent::__construct();
+        $headers = getallheaders();
+        $token = isset($headers['Authorization']) ? str_replace('Bearer ', '', $headers['Authorization']) : '';
+
+        if (empty($token)) {
+            $this->sendResponse(['status' => false, 'msg' => 'Token no proporcionado'], 401);
+            exit;
+        }
+
+        $jwt = new JwtHandler();
+        $this->userData = $jwt->validateToken($token);
+        if (!$this->userData) {
+            $this->sendResponse(['status' => false, 'msg' => 'Token inválido o expirado'], 401);
+            exit;
+        }
+
+        if ($this->userData['id_rol'] > 2) {
+            $this->sendResponse(['status' => false, 'msg' => 'Acceso denegado'], 403);
+            exit;
+        }
     }
 
     /**
@@ -98,20 +117,21 @@ class Sanciones extends Controllers
      */
     public function listar($params)
     {
-        $headers = getallheaders();
-        $token = isset($headers['Authorization']) ? str_replace('Bearer ', '', $headers['Authorization']) : '';
+        // Token validation is now handled in the constructor
+        // $headers = getallheaders();
+        // $token = isset($headers['Authorization']) ? str_replace('Bearer ', '', $headers['Authorization']) : '';
 
-        if (empty($token)) {
-            $this->sendResponse(['status' => false, 'msg' => 'Token no proporcionado'], 401);
-            return;
-        }
+        // if (empty($token)) {
+        //     $this->sendResponse(['status' => false, 'msg' => 'Token no proporcionado'], 401);
+        //     return;
+        // }
 
-        $jwt = new JwtHandler();
-        $jwtData = $jwt->validateToken($token);
-        if (!$jwtData) {
-            $this->sendResponse(['status' => false, 'msg' => 'Token inválido o expirado'], 401);
-            return;
-        }
+        // $jwt = new JwtHandler();
+        // $jwtData = $jwt->validateToken($token);
+        // if (!$jwtData) {
+        //     $this->sendResponse(['status' => false, 'msg' => 'Token inválido o expirado'], 401);
+        //     return;
+        // }
 
         $idTorneo = intval($params);
         if ($idTorneo <= 0) {

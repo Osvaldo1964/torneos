@@ -14,16 +14,22 @@ class Roles extends Controllers
         if (!$this->userData) {
             $this->res(false, "Token inválido o expirado");
         }
-
-        // Solo Super Admin puede acceder a este controlador
-        if ($this->userData['id_rol'] != 1) {
-            $this->res(false, "No tienes permisos para acceder a este módulo");
-        }
     }
 
     public function getRoles()
     {
         $arrData = $this->model->selectRoles();
+
+        // Si no es Super Admin, filtrar roles de administración
+        if ($this->userData['id_rol'] != 1) {
+            $arrData = array_filter($arrData, function ($rol) {
+                // Excluir Super Admin (1) y Liga Admin (2)
+                return $rol['id_rol'] > 2;
+            });
+            // Reindexar array para evitar problemas en JSON
+            $arrData = array_values($arrData);
+        }
+
         $this->res(true, "Listado de roles", $arrData);
     }
 
@@ -44,6 +50,9 @@ class Roles extends Controllers
     public function setRol()
     {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            if ($this->userData['id_rol'] != 1) {
+                $this->res(false, "No tienes permisos para realizar esta acción");
+            }
             $data = json_decode(file_get_contents("php://input"), true);
 
             $intIdRol = isset($data['idRol']) ? intval($data['idRol']) : 0;
@@ -75,6 +84,9 @@ class Roles extends Controllers
     public function delRol()
     {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            if ($this->userData['id_rol'] != 1) {
+                $this->res(false, "No tienes permisos para realizar esta acción");
+            }
             $data = json_decode(file_get_contents("php://input"), true);
             $intIdRol = intval($data['id_rol']);
 

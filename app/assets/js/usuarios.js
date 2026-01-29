@@ -101,8 +101,6 @@ async function fntLoadRoles() {
         const result = await response.json();
         let html = '<option value="">Seleccione Rol</option>';
         result.data.forEach(r => {
-            // Un Liga Admin no puede asignar rol de Super Admin
-            if (user.id_rol != 1 && r.id_rol == 1) return;
             html += `<option value="${r.id_rol}">${r.nombre_rol}</option>`;
         });
         document.getElementById('id_rol').innerHTML = html;

@@ -118,4 +118,10 @@ class JugadoresModel extends Mysql
                 WHERE ej.id_equipo = $idEquipo AND j.estado != 0";
         return $this->select_all($sql);
     }
+    public function isEquipoDeDelegado(int $idEquipo, int $idDelegado)
+    {
+        $sql = "SELECT id_equipo FROM equipos WHERE id_equipo = $idEquipo AND id_delegado = $idDelegado";
+        $res = $this->select($sql);
+        return !empty($res);
+    }
 }

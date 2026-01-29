@@ -140,7 +140,8 @@
     <div class="sidebar d-flex flex-column">
         <h2 class="mb-5 fw-bold text-nowrap">Global<span>Cup</span></h2>
         <nav class="nav flex-column mb-auto">
-            <a href="<?= $base_path ?>dashboard.php" class="nav-link <?= $data['page_name'] == 'dashboard' ? 'active fw-bold' : '' ?>"><i
+            <a href="<?= $base_path ?>dashboard.php"
+                class="nav-link <?= $data['page_name'] == 'dashboard' ? 'active fw-bold' : '' ?>"><i
                     class="fa-solid fa-gauge me-2"></i> Dashboard</a>
             <a href="<?= $base_path ?>roles.php" id="menuRoles"
                 class="nav-link <?= $data['page_name'] == 'roles' ? 'active fw-bold' : '' ?>"><i
@@ -151,7 +152,7 @@
             <a href="<?= $base_path ?>deportiva.php"
                 class="nav-link <?= $data['page_name'] == 'deportiva' ? 'active fw-bold' : '' ?>"><i
                     class="fa-solid fa-futbol me-2"></i> Gestión Deportiva</a>
-            <a href="<?= $base_path ?>finanzas.php"
+            <a href="<?= $base_path ?>finanzas.php" id="menuFinanzas"
                 class="nav-link <?= $data['page_name'] == 'finanzas' ? 'active fw-bold' : '' ?>"><i
                     class="fa-solid fa-money-bill-trend-up me-2"></i> Finanzas</a>
         </nav>
@@ -212,6 +213,11 @@
                         // Restringir módulo de Roles solo a Super Admin (1)
                         if (user.id_rol != 1 && document.getElementById('menuRoles')) {
                             document.getElementById('menuRoles').remove();
+                        }
+
+                        // Restringir módulo Finanzas solo a Admins (1 y 2)
+                        if (user.id_rol > 2 && document.getElementById('menuFinanzas')) {
+                            document.getElementById('menuFinanzas').remove();
                         }
 
                         // Configuración del menú de Ligas

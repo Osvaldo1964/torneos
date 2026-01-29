@@ -14,6 +14,10 @@ class Pagos extends Controllers
             $this->res(false, "Token inválido");
             exit;
         }
+        if ($this->userData['id_rol'] > 2) {
+            $this->res(false, "Acceso denegado");
+            exit;
+        }
     }
 
     public function listar($idTorneo)

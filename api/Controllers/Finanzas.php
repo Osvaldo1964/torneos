@@ -14,6 +14,11 @@ class Finanzas extends Controllers
             $this->res(false, "Token inválido");
             exit;
         }
+        // Restricción de acceso para Finanzas (Solo Super Admin y Liga Admin)
+        if ($this->userData['id_rol'] > 2) {
+            $this->res(false, "Acceso denegado: No tienes permisos para acceder al módulo de finanzas");
+            exit;
+        }
     }
 
     /**

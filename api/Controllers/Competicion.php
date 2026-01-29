@@ -72,6 +72,9 @@ class Competicion extends Controllers
     public function setResultado()
     {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            if ($this->userData['id_rol'] > 2) {
+                $this->res(false, "No tienes permisos de edición");
+            }
             $data = json_decode(file_get_contents("php://input"), true);
             $idPartido = intval($data['id_partido'] ?? 0);
             $golesLocal = intval($data['goles_local'] ?? 0);
@@ -130,6 +133,9 @@ class Competicion extends Controllers
     public function setFase()
     {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            if ($this->userData['id_rol'] > 2) {
+                $this->res(false, "No tienes permisos de edición");
+            }
             $data = json_decode(file_get_contents("php://input"), true);
             $idTorneo = intval($data['id_torneo'] ?? 0);
             $nombre = trim($data['nombre'] ?? '');
@@ -150,6 +156,9 @@ class Competicion extends Controllers
     public function delFase()
     {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            if ($this->userData['id_rol'] > 2) {
+                $this->res(false, "No tienes permisos de edición");
+            }
             $data = json_decode(file_get_contents("php://input"), true);
             $idFase = intval($data['id_fase'] ?? 0);
             if ($idFase > 0) {
@@ -165,6 +174,9 @@ class Competicion extends Controllers
     public function setGrupo()
     {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            if ($this->userData['id_rol'] > 2) {
+                $this->res(false, "No tienes permisos de edición");
+            }
             $data = json_decode(file_get_contents("php://input"), true);
             $idFase = intval($data['id_fase'] ?? 0);
             $idGrupo = intval($data['id_grupo'] ?? 0);
@@ -198,6 +210,9 @@ class Competicion extends Controllers
     public function delGrupo()
     {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            if ($this->userData['id_rol'] > 2) {
+                $this->res(false, "No tienes permisos de edición");
+            }
             $data = json_decode(file_get_contents("php://input"), true);
             $idGrupo = intval($data['id_grupo'] ?? 0);
             if ($idGrupo > 0) {
@@ -221,6 +236,9 @@ class Competicion extends Controllers
     public function generarFixture($idFase)
     {
         $idFase = intval($idFase);
+        if ($this->userData['id_rol'] > 2) {
+            $this->res(false, "No tienes permisos de edición");
+        }
         $fase = $this->model->selectFase($idFase);
         if (!$fase)
             $this->res(false, "Fase no encontrada");
@@ -308,6 +326,9 @@ class Competicion extends Controllers
     public function setProgramacion()
     {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            if ($this->userData['id_rol'] > 2) {
+                $this->res(false, "No tienes permisos de edición");
+            }
             $data = json_decode(file_get_contents("php://input"), true);
             $idPartido = intval($data['id_partido'] ?? 0);
             $fecha = $data['fecha_partido'] ?? '';

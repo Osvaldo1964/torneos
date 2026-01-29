@@ -41,12 +41,17 @@ class TorneosModel extends Mysql
     }
 
     // --- Gestión de Inscripciones ---
-    public function selectInscritos(int $idTorneo)
+    public function selectInscritos(int $idTorneo, int $idDelegado = 0)
     {
+        $where = "WHERE te.id_torneo = $idTorneo AND e.estado != 0";
+        if ($idDelegado > 0) {
+            $where .= " AND e.id_delegado = $idDelegado";
+        }
+
         $sql = "SELECT e.id_equipo, e.nombre, e.escudo, te.pago_inscripcion 
                 FROM torneo_equipos te 
                 INNER JOIN equipos e ON te.id_equipo = e.id_equipo 
-                WHERE te.id_torneo = $idTorneo AND e.estado != 0";
+                $where";
         return $this->select_all($sql);
     }
 

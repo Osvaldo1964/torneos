@@ -27,8 +27,6 @@ require_once("template/header.php");
                 <tr>
                     <th class="border-0 text-muted small text-uppercase">ID</th>
                     <th class="border-0 text-muted small text-uppercase">Liga</th>
-                    <th class="border-0 text-muted small text-uppercase text-center">Cuota Jugador</th>
-                    <th class="border-0 text-muted small text-uppercase text-center">Multas (A/R)</th>
                     <th class="border-0 text-muted small text-uppercase">Estado</th>
                     <th class="border-0 text-muted small text-uppercase text-center">Acciones</th>
                 </tr>
@@ -42,7 +40,7 @@ require_once("template/header.php");
 
 <!-- Modal Liga -->
 <div class="modal fade" id="modalLiga" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-dialog modal-md modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg" style="border-radius: 20px;">
             <div class="modal-header border-0 pb-0">
                 <h5 class="modal-title fw-bold" id="modalTitle">Detalles de la Liga</h5>
@@ -57,27 +55,7 @@ require_once("template/header.php");
                             <input type="text" class="form-control" id="nombre" name="nombre" required
                                 style="border-radius: 10px;">
                         </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label text-muted small fw-bold">Cuota Mensual Jugador ($)</label>
-                            <input type="number" class="form-control" id="cuota_mensual_jugador"
-                                name="cuota_mensual_jugador" required style="border-radius: 10px;">
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label text-muted small fw-bold">Valor Arbitraje Base ($)</label>
-                            <input type="number" class="form-control" id="valor_arbitraje_base"
-                                name="valor_arbitraje_base" required style="border-radius: 10px;">
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label text-muted small fw-bold">Multa Tarjeta Amarilla ($)</label>
-                            <input type="number" class="form-control" id="valor_amarilla" name="valor_amarilla" required
-                                style="border-radius: 10px;">
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label text-muted small fw-bold">Multa Tarjeta Roja ($)</label>
-                            <input type="number" class="form-control" id="valor_roja" name="valor_roja" required
-                                style="border-radius: 10px;">
-                        </div>
-                        <div class="col-md-6 mb-0">
+                        <div class="col-md-12 mb-0">
                             <label class="form-label text-muted small fw-bold">Estado</label>
                             <select class="form-select" id="estado" name="estado" style="border-radius: 10px;">
                                 <option value="1">Activa</option>

@@ -140,6 +140,9 @@ class Jugadores extends Controllers
     public function setNomina()
     {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            if ($this->userData['id_rol'] > 3) {
+                $this->res(false, "No tienes permisos para gestionar nóminas");
+            }
             $data = json_decode(file_get_contents("php://input"), true);
             $idTorneo = intval($data['id_torneo'] ?? 0);
             $idEquipo = intval($data['id_equipo'] ?? 0);
@@ -147,6 +150,13 @@ class Jugadores extends Controllers
             $dorsal = intval($data['dorsal'] ?? 0);
 
             if ($idTorneo > 0 && $idEquipo > 0 && $idJugador > 0) {
+                // Validación para Delegados
+                if ($this->userData['id_rol'] == 3) {
+                    if (!$this->model->isEquipoDeDelegado($idEquipo, $this->userData['id_user'])) {
+                        $this->res(false, "No tienes permisos para gestionar este equipo");
+                    }
+                }
+
                 try {
                     $request = $this->model->insertEnNomina($idTorneo, $idEquipo, $idJugador, $dorsal);
                     if ($request) {
@@ -163,12 +173,22 @@ class Jugadores extends Controllers
     public function delNomina()
     {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            if ($this->userData['id_rol'] > 3) {
+                $this->res(false, "No tienes permisos para gestionar nóminas");
+            }
             $data = json_decode(file_get_contents("php://input"), true);
             $idTorneo = intval($data['id_torneo'] ?? 0);
             $idEquipo = intval($data['id_equipo'] ?? 0);
             $idJugador = intval($data['id_jugador'] ?? 0);
 
             if ($idTorneo && $idEquipo && $idJugador) {
+                // Validación para Delegados
+                if ($this->userData['id_rol'] == 3) {
+                    if (!$this->model->isEquipoDeDelegado($idEquipo, $this->userData['id_user'])) {
+                        $this->res(false, "No tienes permisos para gestionar este equipo");
+                    }
+                }
+
                 $request = $this->model->deleteDeNomina($idTorneo, $idEquipo, $idJugador);
                 if ($request)
                     $this->res(true, "Jugador retirado de nómina");

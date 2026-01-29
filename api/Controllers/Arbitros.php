@@ -12,6 +12,11 @@ class Arbitros extends Controllers
         $this->userData = $jwt->validateToken($token);
         if (!$this->userData) {
             $this->res(false, "Token inválido");
+            exit;
+        }
+        if ($this->userData['id_rol'] > 2) {
+            $this->res(false, "Acceso denegado");
+            exit;
         }
     }
 

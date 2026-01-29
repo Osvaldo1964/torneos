@@ -46,20 +46,21 @@ class Ligas extends Controllers
     {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $data = json_decode(file_get_contents("php://input"), true);
-            $idLiga = intval($data['id_liga']);
-            $nombre = trim($data['nombre']);
-            $cuota = floatval($data['cuota_mensual_jugador']);
-            $amarilla = floatval($data['valor_amarilla']);
-            $roja = floatval($data['valor_roja']);
-            $arbitraje = floatval($data['valor_arbitraje_base']);
-            $estado = intval($data['estado']);
+            $idLiga = intval($data['id_liga'] ?? 0);
+            $nombre = trim($data['nombre'] ?? '');
+            $estado = intval($data['estado'] ?? 1);
+
+            if (empty($nombre)) {
+                $this->res(false, "El nombre de la liga es obligatorio");
+            }
 
             if ($idLiga == 0) {
                 // Crear (Solo Super Admin)
                 if ($this->userData['id_rol'] != 1)
                     $this->res(false, "No tienes permiso para crear ligas");
-                $query = "INSERT INTO ligas(nombre, cuota_mensual_jugador, valor_amarilla, valor_roja, valor_arbitraje_base, estado) VALUES(?,?,?,?,?,?)";
-                $arrParams = [$nombre, $cuota, $amarilla, $roja, $arbitraje, $estado];
+                // Valores financieros se inicializan en 0, ahora se manejan por Torneo
+                $query = "INSERT INTO ligas(nombre, cuota_mensual_jugador, valor_amarilla, valor_roja, valor_arbitraje_base, estado) VALUES(?,0,0,0,0,?)";
+                $arrParams = [$nombre, $estado];
                 $request = $this->model->insert($query, $arrParams);
                 if ($request > 0)
                     $this->res(true, "Liga creada correctamente");
@@ -68,8 +69,8 @@ class Ligas extends Controllers
                 if ($this->userData['id_rol'] != 1 && $this->userData['id_liga'] != $idLiga) {
                     $this->res(false, "No tienes permiso para editar esta liga");
                 }
-                $query = "UPDATE ligas SET nombre=?, cuota_mensual_jugador=?, valor_amarilla=?, valor_roja=?, valor_arbitraje_base=?, estado=? WHERE id_liga=?";
-                $arrParams = [$nombre, $cuota, $amarilla, $roja, $arbitraje, $estado, $idLiga];
+                $query = "UPDATE ligas SET nombre=?, estado=? WHERE id_liga=?";
+                $arrParams = [$nombre, $estado, $idLiga];
                 $request = $this->model->update($query, $arrParams);
                 if ($request)
                     $this->res(true, "Liga actualizada correctamente");

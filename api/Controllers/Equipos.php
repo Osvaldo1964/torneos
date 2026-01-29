@@ -15,7 +15,8 @@ class Equipos extends Controllers
 
     public function getEquipos()
     {
-        $arrData = $this->model->selectEquipos($this->userData['id_liga']);
+        $idDelegado = ($this->userData['id_rol'] == 3) ? $this->userData['id_user'] : 0;
+        $arrData = $this->model->selectEquipos($this->userData['id_liga'], $idDelegado);
         $this->res(true, "Listado de equipos", $arrData);
     }
 
@@ -41,6 +42,9 @@ class Equipos extends Controllers
     public function setEquipo()
     {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            if ($this->userData['id_rol'] > 2) {
+                $this->res(false, "No tienes permisos de administración de equipos");
+            }
             $idEquipo = intval($_POST['id_equipo'] ?? 0);
             $nombre = trim($_POST['nombre'] ?? '');
             $idDelegado = intval($_POST['id_delegado'] ?? 0);
@@ -86,6 +90,9 @@ class Equipos extends Controllers
     public function delEquipo()
     {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            if ($this->userData['id_rol'] > 2) {
+                $this->res(false, "No tienes permisos de administración de equipos");
+            }
             $data = json_decode(file_get_contents("php://input"), true);
             $idEquipo = intval($data['id_equipo']);
 

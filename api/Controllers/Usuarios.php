@@ -40,22 +40,43 @@ class Usuarios extends Controllers
     {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $data = json_decode(file_get_contents("php://input"), true);
-            $idPersona = intval($data['id_user']);
-            $dni = trim($data['identificacion']);
-            $nombres = trim($data['nombres']);
-            $apellidos = trim($data['apellidos']);
-            $email = strtolower(trim($data['email']));
-            $idrol = intval($data['id_rol']);
-            $idliga = ($this->userData['id_rol'] == 1) ? intval($data['id_liga']) : $this->userData['id_liga'];
-            $estado = intval($data['estado']);
+            $idPersona = intval($data['id_user'] ?? 0);
+            $dni = trim($data['identificacion'] ?? '');
+            $nombres = trim($data['nombres'] ?? '');
+            $apellidos = trim($data['apellidos'] ?? '');
+            $email = strtolower(trim($data['email'] ?? ''));
+            $idrol = intval($data['id_rol'] ?? 0);
+            $idliga = ($this->userData['id_rol'] == 1) ? intval($data['id_liga'] ?? 0) : $this->userData['id_liga'];
+            $estado = intval($data['estado'] ?? 1);
             $password = !empty($data['password']) ? hash("SHA256", $data['password']) : "";
 
-            // Validaciones de seguridad
-            if ($this->userData['id_rol'] != 1) {
-                if ($idrol == 1)
-                    $this->res(false, "No puedes crear Super Admins");
-                if ($idliga != $this->userData['id_liga'])
-                    $this->res(false, "No puedes crear usuarios para otra liga");
+            if (empty($dni) || empty($nombres) || empty($email) || empty($idrol)) {
+                $this->res(false, "Todos los campos obligatorios deben estar llenos");
+            }
+
+            // Verificar autoedición
+            $isSelfEdit = ($idPersona > 0 && $idPersona == $this->userData['id_user']);
+
+            // Si se edita a sí mismo, forzar que NO cambie Rol, Liga ni Estado (aunque el front lo envíe)
+            if ($isSelfEdit) {
+                $idrol = $this->userData['id_rol'];
+                $idliga = $this->userData['id_liga'];
+                // Mantener estado actual, no se puede desactivar a sí mismo
+                $userCurrent = $this->model->selectUsuario($idPersona);
+                // Validar que userCurrent exista para evitar errores
+                $estado = isset($userCurrent['estado']) ? intval($userCurrent['estado']) : 1;
+            }
+
+            // Validaciones de seguridad (Si NO es autoedición y NO es Super Admin)
+            if (!$isSelfEdit && $this->userData['id_rol'] != 1) {
+                // No puede interactuar con Super Admins (1) ni Liga Admins (2)
+                // Si intenta editar un admin o crear uno...
+                if ($idrol <= 2) {
+                    $this->res(false, "No tienes permisos para asignar este rol (Solo Delegados y Jugadores)");
+                }
+                if ($idliga != $this->userData['id_liga']) {
+                    $this->res(false, "No puedes gestionar usuarios de otra liga");
+                }
             }
 
             if ($this->model->userExists($email, $dni, $idPersona)) {

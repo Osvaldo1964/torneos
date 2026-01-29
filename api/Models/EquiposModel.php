@@ -6,12 +6,17 @@ class EquiposModel extends Mysql
         parent::__construct();
     }
 
-    public function selectEquipos(int $idLiga)
+    public function selectEquipos(int $idLiga, int $idDelegado = 0)
     {
+        $where = "WHERE e.id_liga = $idLiga AND e.estado != 0";
+        if ($idDelegado > 0) {
+            $where .= " AND e.id_delegado = $idDelegado";
+        }
+
         $sql = "SELECT e.id_equipo, e.nombre, e.escudo, e.estado, p.nombres as delegado_nombre, p.apellidos as delegado_apellido 
                 FROM equipos e 
                 LEFT JOIN personas p ON e.id_delegado = p.id_persona 
-                WHERE e.id_liga = $idLiga AND e.estado != 0";
+                $where";
         return $this->select_all($sql);
     }
 
@@ -43,9 +48,8 @@ class EquiposModel extends Mysql
 
     public function selectDelegados(int $idLiga)
     {
-        // Rol 3 es Delegado (según sugerencias anteriores, pero buscaremos por rol o cualquier persona de la liga)
-        // Por ahora, traigamos a los usuarios que pertenecen a esa liga
-        $sql = "SELECT id_persona, nombres, apellidos FROM personas WHERE id_liga = $idLiga AND estado != 0";
+        // Rol 3 es Delegado
+        $sql = "SELECT id_persona, nombres, apellidos FROM personas WHERE id_liga = $idLiga AND id_rol = 3 AND estado != 0";
         return $this->select_all($sql);
     }
 }

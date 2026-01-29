@@ -9,8 +9,14 @@ class Recibos extends Controllers
         $token = isset($headers['Authorization']) ? str_replace('Bearer ', '', $headers['Authorization']) : "";
         $jwt = new JwtHandler();
         $this->userData = $jwt->validateToken($token);
-        if (!$this->userData)
+        if (!$this->userData) {
             $this->res(false, "Token inválido");
+            exit;
+        }
+        if ($this->userData['id_rol'] > 2) {
+            $this->res(false, "Acceso denegado");
+            exit;
+        }
     }
 
     /**
@@ -92,7 +98,8 @@ class Recibos extends Controllers
                             $emailSent = Email::sendEmail($emailData);
 
                             // 3. Limpiar archivo temporal
-                            if (file_exists($pdfData['path'])) unlink($pdfData['path']);
+                            if (file_exists($pdfData['path']))
+                                unlink($pdfData['path']);
                         }
                     }
                 }
